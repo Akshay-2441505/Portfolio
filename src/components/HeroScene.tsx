@@ -3,7 +3,7 @@ import { Canvas, useFrame } from '@react-three/fiber'
 import { PerformanceMonitor } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import type { Group } from 'three'
-import { CrystalShards } from './CrystalShards'
+import { Football } from './Football'
 import { useInView } from '../hooks/useInView'
 import { useScrollScrub } from '../hooks/useScrollScrub'
 import { scrollVelocity } from '../lib/scrollVelocity'
@@ -15,10 +15,8 @@ import { scrollVelocity } from '../lib/scrollVelocity'
 
 function HeroSceneContent({
   progress,
-  lowQuality,
 }: {
   progress: RefObject<number>
-  lowQuality: boolean
 }) {
   const pointer = useRef({ x: 0, y: 0 })
   const groupRef = useRef<Group>(null)
@@ -48,7 +46,7 @@ function HeroSceneContent({
 
   return (
     <group ref={groupRef}>
-      <CrystalShards count={lowQuality ? 8 : 16} spread={3.6} scale={1.2} />
+      <Football radius={1.4} spin={0.12} />
     </group>
   )
 }
@@ -89,8 +87,8 @@ export function HeroScene() {
         <PerformanceMonitor onDecline={() => setLowQuality(true)} />
         <ambientLight intensity={0.5} />
         <pointLight position={[2, 2, 3]} intensity={1.4} color="#04f6fc" />
-        <pointLight position={[-2, -1, -2]} intensity={0.5} color="#7f9bb3" />
-        <HeroSceneContent progress={progress} lowQuality={lowQuality} />
+        <pointLight position={[-2, -1, -2]} intensity={0.5} color="#f2f0eb" />
+        <HeroSceneContent progress={progress} />
         {!lowQuality && (
           <EffectComposer>
             <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={0.6} />
