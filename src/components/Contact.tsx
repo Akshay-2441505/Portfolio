@@ -3,7 +3,6 @@ import { useRef, type MouseEvent } from 'react'
 import { FadeIn } from './FadeIn'
 import { GithubMark, LinkedinMark } from './icons/BrandIcons'
 import { Magnetic } from './Magnetic'
-import { PitchGrid } from './PitchGrid'
 import { gsap } from '../lib/gsap'
 import { motionTokens } from '../lib/motion'
 import { fullTime, profile } from '../data/content'
@@ -35,9 +34,6 @@ export function Contact() {
 
   return (
     <section id="contact" className="relative px-6 py-24 md:px-10 md:py-32">
-      {/* Floodlights up for the closing beat — a second, more intense
-       * pitch-grid instance scoped to just this section. */}
-      <PitchGrid opacity={0.24} absolute />
       <div className="relative mx-auto max-w-3xl text-center">
         <FadeIn>
           <h2 className="text-4xl font-bold uppercase tracking-tight md:text-6xl">
