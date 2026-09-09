@@ -4,7 +4,6 @@ export const profile = {
   role: 'BCA Student — Interactive & Web Development',
   tagline: 'I build things that move on scroll.',
   location: 'Bengaluru, India',
-  status: 'Open to work',
   email: 'akshay.kurdekar@bcah.christuniversity.in',
   linkedin: 'https://linkedin.com/in/akshay-a-kurdekar-ab95202a8',
   github: 'https://github.com/Akshay-2441505',
@@ -167,84 +166,13 @@ export const moreWork: MoreWorkItem[] = [
 export const heroCopy = {
   headline: 'Akshay Kurdekar',
   subLine: 'Building AI-native products from the problem up.',
-  positionTag: 'Position: Product & Build',
+  positionTag: 'Product & Build',
   metaLine: 'Co-founding Dekho · BCA, Christ University',
 }
 
 export const fullTime = {
   heading: 'Full-time.',
   body: 'Always open to talking product, growth, or a good technical problem.',
-}
-
-export type FifaAttribute = {
-  code: 'PAC' | 'SHO' | 'PAS' | 'DRI' | 'DEF' | 'PHY'
-  rating: number
-  /** The real skill — primary label per DESIGN_BRIEF.md's labeling rule
-   * (shown prominently on the card front; `code` is the small secondary tag). */
-  skill: string
-  descriptor: string
-  /** Why this number — shown on the card back, not the front. */
-  reasoning: string
-}
-
-export const fifaCard = {
-  name: 'AKSHAY KURDEKAR',
-  position: 'CM',
-  positionFull: 'Central Midfield',
-  overall: 86,
-  tier: 'Ones to Watch',
-  club: 'Dekho',
-  nation: 'India',
-  ribbon: 'Currently building: Frontage',
-  attributes: [
-    {
-      code: 'PAS',
-      rating: 90,
-      skill: 'Passing',
-      descriptor: 'collaboration & customer discovery',
-      reasoning: 'JTBD interviews, cross-functional work at Dekho',
-    },
-    {
-      code: 'DEF',
-      rating: 91,
-      skill: 'Defending',
-      descriptor: 'resilience',
-      reasoning:
-        "Structured 3-phase return from a knee injury while still building; highest-rated stat on purpose — it's the truest one",
-    },
-    {
-      code: 'DRI',
-      rating: 86,
-      skill: 'Dribbling',
-      descriptor: 'adaptability',
-      reasoning:
-        'Navigating the 10→50→100 staged pilot rollout, adjusting the product as real user feedback came in',
-    },
-    {
-      code: 'PAC',
-      rating: 84,
-      skill: 'Pace',
-      descriptor: 'speed of execution',
-      reasoning:
-        'Shipped Wealth redesign, chatbot API migration, Monthly Wrap, and app-lock security within one build cycle',
-    },
-    {
-      code: 'PHY',
-      rating: 83,
-      skill: 'Physical',
-      descriptor: 'stamina',
-      reasoning:
-        'Ten years playing, running two active build tracks (Dekho + Frontage) as a student simultaneously',
-    },
-    {
-      code: 'SHO',
-      rating: 79,
-      skill: 'Shooting',
-      descriptor: 'decisiveness under pressure',
-      reasoning: "Committing to a track and product concept under the Buildathon's hard deadline",
-    },
-  ] satisfies FifaAttribute[],
-  bio: 'BCA student building AI-native products from the ground up — co-founding Dekho, currently building for the Razorpay AI Buildathon. Ten years at central midfield, rebuilding my game after a knee injury with the same structured approach I bring to product work: diagnose, plan, execute.',
 }
 
 export const stats = [
