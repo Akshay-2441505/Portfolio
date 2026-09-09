@@ -17,9 +17,19 @@ function CardStack() {
   const cardRefs = useRef(new Map<string, HTMLDivElement>())
   const pendingFlipState = useRef<ReturnType<typeof Flip.getState> | null>(null)
   const isFirstRender = useRef(true)
+  // Names of the cards swapping front-of-stack position, captured in cycle()
+  // for the layout effect below. Flip's own onEnter/onLeave never fire here
+  // (all 3 cards stay mounted with stable keys — cycle() only reorders the
+  // array, so Flip's DOM-presence diff always sees the same element set), so
+  // the "arriving at front" / "leaving front" polish is done as explicit
+  // tweens on these two elements instead.
+  const enteringName = useRef<string | null>(null)
+  const leavingName = useRef<string | null>(null)
 
   function cycle() {
     pendingFlipState.current = Flip.getState(Array.from(cardRefs.current.values()))
+    leavingName.current = order[0]
+    enteringName.current = order[1]
     setOrder((prev) => [...prev.slice(1), prev[0]])
   }
 
@@ -37,11 +47,16 @@ function CardStack() {
       duration: 0.6,
       ease: 'sine.inOut',
       absolute: true,
-      onEnter: (elements) =>
-        gsap.from(elements, { duration: 0.4, yPercent: 8, opacity: 0, ease: 'expo.out' }),
-      onLeave: (elements) =>
-        gsap.to(elements, { duration: 0.4, opacity: 0, ease: 'expo.out' }),
     })
+
+    const enteringEl = enteringName.current ? cardRefs.current.get(enteringName.current) : null
+    const leavingEl = leavingName.current ? cardRefs.current.get(leavingName.current) : null
+    if (enteringEl) {
+      gsap.from(enteringEl, { duration: 0.4, yPercent: 8, opacity: 0, ease: 'expo.out' })
+    }
+    if (leavingEl) {
+      gsap.to(leavingEl, { duration: 0.4, opacity: 0.5, ease: 'expo.out' })
+    }
   }, [order])
 
   return (
