@@ -1,0 +1,214 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'Space Mono', ui-monospace, monospace;
+
+  --color-bg: #0a0a0a;
+  --color-surface: #111111;
+  --color-fg: #f2f0eb;
+  --color-muted: #8a8a86;
+  --color-border: rgba(242, 240, 235, 0.12);
+  /* Site identity/structure — sampled from the FIFA card's neon edge-glow
+   * (fifa-card.jpg), confirmed against the kickoff video's own glow. */
+  --color-accent-primary: #04f6fc;
+  /* "Happening right now" only — match clock stoppage time, IN BUILD tags,
+   * the FIFA card's build-status ribbon. Never used as general chrome. */
+  --color-accent-live: #ff5c35;
+  /* Presence-layer secondary hue — sampled from fifa-card.jpg's own
+   * background gradient (clean architectural-glass patch, top-left corner,
+   * averaged over ~1.4k px, hue ~205°). The card's gradient has no
+   * violet/indigo despite PALETTE.md's assumption — confirmed via direct
+   * pixel sampling (OpenCV) rather than guessed. This is the real value. */
+  --color-accent-secondary: #7f9bb3;
+  /* Confirmation states only (email sent, form submitted) — muted green,
+   * no source asset to sample, tuned by eye against the dark palette. */
+  --color-accent-success: #3fae7a;
+  /* Glow — soft falloff for accent-primary/accent-live chrome, replacing
+   * flat-color borders/fills wherever they're meant to read as emitting
+   * light rather than painted on. */
+  --glow-primary: 0 0 24px color-mix(in srgb, var(--color-accent-primary) 55%, transparent);
+  --glow-live: 0 0 20px color-mix(in srgb, var(--color-accent-live) 55%, transparent);
+}
+
+html {
+  background: var(--color-bg);
+  color-scheme: dark;
+}
+
+body {
+  margin: 0;
+  /* Vignette instead of flat fill — near-black center easing to pure black
+   * at the edges, so the page has depth instead of a single flat swatch. */
+  background: radial-gradient(ellipse at center, var(--color-bg) 0%, #000000 100%);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Per-section temperature drift — defaults to fully transparent (shows the
+ * body vignette through untouched); Hero and Highlights override this to a
+ * low-alpha tint so they read a touch cooler/warmer, for a sense of journey
+ * without a new named color or occluding the vignette elsewhere. */
+:root {
+  --section-tint: transparent;
+}
+section {
+  background: var(--section-tint);
+}
+#top {
+  --section-tint: rgba(30, 70, 110, 0.1);
+}
+/* #projects is a plain div (the sticky-card stack), not a <section> — needs
+ * its own explicit background since the generic `section` rule above only
+ * matches actual section elements like #highlights. */
+#highlights,
+#projects {
+  --section-tint: rgba(110, 70, 30, 0.1);
+  background: var(--section-tint);
+}
+
+#root {
+  overflow-x: clip;
+}
+
+::selection {
+  background: var(--color-accent-primary);
+  color: var(--color-bg);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-primary);
+}
+html {
+  scrollbar-color: var(--color-border) var(--color-bg);
+}
+
+/* Project cards */
+.project-spotlight {
+  position: relative;
+  isolation: isolate;
+}
+.project-spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background: radial-gradient(
+    500px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--color-accent-primary) 15%, transparent),
+    transparent 70%
+  );
+}
+.project-spotlight:hover::before {
+  opacity: 1;
+}
+
+.project-card-bg {
+  background: linear-gradient(
+    120deg,
+    var(--color-surface) 0%,
+    color-mix(in srgb, var(--color-accent-primary) 18%, var(--color-surface)) 50%,
+    var(--color-surface) 100%
+  );
+  background-size: 220% 220%;
+  animation: card-drift 8s ease-in-out infinite;
+}
+
+@keyframes card-drift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Match clock */
+.match-clock {
+  transition: border-color 0.3s ease, color 0.3s ease;
+}
+.match-clock.is-stoppage {
+  border-color: var(--color-accent-live);
+  color: var(--color-fg);
+}
+.match-clock.is-stoppage .clock-dot {
+  background: var(--color-accent-live);
+  box-shadow: var(--glow-live);
+}
+
+/* Film grain — oversized and nudged by steps() so it flickers like real
+ * grain instead of sitting as a fixed static texture. */
+.grain-overlay {
+  position: fixed;
+  inset: -20%;
+  width: 140%;
+  height: 140%;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  /* Tinted cyan rather than neutral gray, so the texture reinforces the
+   * palette instead of sitting unrelated to it — cheaper than regenerating
+   * the noise SVG's own color channel. */
+  filter: hue-rotate(160deg) saturate(2.2);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-shift 8s steps(8) infinite;
+}
+
+@keyframes grain-shift {
+  0% {
+    transform: translate(0, 0);
+  }
+  12.5% {
+    transform: translate(-5%, 3%);
+  }
+  25% {
+    transform: translate(4%, -6%);
+  }
+  37.5% {
+    transform: translate(-8%, 2%);
+  }
+  50% {
+    transform: translate(6%, 6%);
+  }
+  62.5% {
+    transform: translate(-3%, -4%);
+  }
+  75% {
+    transform: translate(7%, -2%);
+  }
+  87.5% {
+    transform: translate(-6%, 5%);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
