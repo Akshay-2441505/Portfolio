@@ -1,100 +1,87 @@
 import { ArrowUpRight } from 'lucide-react'
-import {
-  motion,
-  useMotionValueEvent,
-  useScroll,
-  useTransform,
-  type MotionValue,
-} from 'framer-motion'
-import { useEffect, useRef, useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { FadeIn } from './FadeIn'
 import { Magnetic } from './Magnetic'
 import { ProjectCard } from './ProjectCard'
 import { WordReveal } from './WordReveal'
-import { moreWork, projects, type Project } from '../data/content'
+import { Flip, gsap } from '../lib/gsap'
+import { moreWork, projects } from '../data/content'
 
-/** One card in the stack: pins via `position: sticky` and scales down as the
- * next card scrolls over it (TECH_SPEC.md §4). Native sticky, not GSAP
- * pin:true — no scroll-height math to fight, and it keeps this interaction
- * on Framer Motion instead of splitting it across two scroll libraries. */
-function StackCard({
-  project,
-  index,
-  total,
-  progress,
-  active,
-}: {
-  project: Project
-  index: number
-  total: number
-  progress: MotionValue<number>
-  active: boolean
-}) {
-  const targetScale = 1 - (total - 1 - index) * 0.03
-  const scale = useTransform(progress, [index / total, 1], [1, targetScale])
-  // The scale delta above is only 3-6% spread across ~1.6 screen-heights of
-  // scroll — real but imperceptible, which is why the pinned stack read as
-  // "stuck" (VISUAL_CRAFT.md bug #2). This second transform gives the visual
-  // panel its own continuous, more visible drift for the entire pin duration.
-  const parallaxY = useTransform(progress, [index / total, 1], [0, -40])
+/** Highlights — a click-to-cycle card stack (EFFECTS_PLAN.md, ref: GSAP's
+ * "Flip Cards" demo). Click (or press Enter/Space) anywhere on the deck to
+ * send the front card to the back; Flip animates every card's position in
+ * one pass, with the demo's own onEnter/onLeave treatment for the card
+ * arriving at the front and the one leaving it. */
+function CardStack() {
+  const [order, setOrder] = useState(() => projects.map((p) => p.name))
+  const cardRefs = useRef(new Map<string, HTMLDivElement>())
+  const pendingFlipState = useRef<ReturnType<typeof Flip.getState> | null>(null)
+  const isFirstRender = useRef(true)
+
+  function cycle() {
+    pendingFlipState.current = Flip.getState(Array.from(cardRefs.current.values()))
+    setOrder((prev) => [...prev.slice(1), prev[0]])
+  }
+
+  useLayoutEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false
+      return
+    }
+    const state = pendingFlipState.current
+    if (!state) return
+    pendingFlipState.current = null
+
+    Flip.from(state, {
+      targets: Array.from(cardRefs.current.values()),
+      duration: 0.6,
+      ease: 'sine.inOut',
+      absolute: true,
+      onEnter: (elements) =>
+        gsap.from(elements, { duration: 0.4, yPercent: 8, opacity: 0, ease: 'expo.out' }),
+      onLeave: (elements) =>
+        gsap.to(elements, { duration: 0.4, opacity: 0, ease: 'expo.out' }),
+    })
+  }, [order])
 
   return (
     <div
-      className="sticky flex h-screen items-center justify-center px-6 md:px-10"
-      style={{ top: `${index * 16}px` }}
+      onClick={cycle}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          cycle()
+        }
+      }}
+      aria-label="Cycle through highlighted projects"
+      className="relative mx-auto h-[75vh] max-h-[720px] w-full max-w-4xl cursor-pointer"
     >
-      <motion.div style={{ scale }} className="w-full max-w-4xl">
-        <ProjectCard project={project} active={active} parallaxY={parallaxY} />
-      </motion.div>
+      {order.map((name, depth) => {
+        const project = projects.find((p) => p.name === name)!
+        return (
+          <div
+            key={name}
+            ref={(el) => {
+              if (el) cardRefs.current.set(name, el)
+              else cardRefs.current.delete(name)
+            }}
+            className="absolute inset-0"
+            style={{
+              zIndex: order.length - depth,
+              transform: `translateY(${depth * 10}px) scale(${1 - depth * 0.03})`,
+            }}
+          >
+            <ProjectCard project={project} active={depth === 0} />
+          </div>
+        )
+      })}
     </div>
   )
 }
 
-/** Small fixed dot indicator confirming scroll is registering, independent
- * of the (subtle) parallax fix above — VISUAL_CRAFT.md bug #2, part 2. */
-function StackProgress({ progress, total }: { progress: MotionValue<number>; total: number }) {
-  const [active, setActive] = useState(0)
-  useMotionValueEvent(progress, 'change', (v) => {
-    const idx = Math.min(total - 1, Math.max(0, Math.floor(v * total)))
-    setActive((prev) => (prev === idx ? prev : idx))
-  })
-
-  return (
-    <div className="pointer-events-none fixed top-1/2 right-6 z-30 hidden -translate-y-1/2 flex-col gap-3 md:flex">
-      {Array.from({ length: total }, (_, i) => (
-        <span
-          key={i}
-          className="h-2 w-2 rounded-full border border-[var(--color-border)] transition-colors duration-300"
-          style={{
-            background: i === active ? 'var(--color-accent-primary)' : 'transparent',
-            boxShadow: i === active ? 'var(--glow-primary)' : 'none',
-          }}
-        />
-      ))}
-    </div>
-  )
-}
-
-/** Highlights, reworked from the original horizontal-scroll-pin into
- * sticky-stacking cards (TECH_SPEC.md §4) — reads more like an actual
- * highlights reel, and keeps the site's scroll-linked interactions on one
- * library (Framer Motion) instead of GSAP ScrollTrigger. */
 export function Projects() {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [inView, setInView] = useState(true)
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ['start start', 'end end'],
-  })
-
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const observer = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting))
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
   return (
     <>
       <section id="highlights" className="px-6 pt-24 pb-12 md:px-10 md:pt-32">
@@ -103,24 +90,13 @@ export function Projects() {
         </FadeIn>
         <FadeIn delay={0.1}>
           <p className="mt-3 font-mono text-xs uppercase tracking-widest text-[var(--color-muted)]">
-            Scroll to keep going ↓
+            Click the stack to cycle →
           </p>
         </FadeIn>
       </section>
 
-      <div id="projects" ref={containerRef} className="relative">
-        {inView && <StackProgress progress={scrollYProgress} total={projects.length} />}
-        {projects.map((project, i) => (
-          <div key={project.name} className="relative" style={{ height: '160vh' }}>
-            <StackCard
-              project={project}
-              index={i}
-              total={projects.length}
-              progress={scrollYProgress}
-              active={inView}
-            />
-          </div>
-        ))}
+      <div id="projects" className="px-6 pb-24 md:px-10 md:pb-32">
+        <CardStack />
       </div>
 
       <MoreWork />

@@ -1,5 +1,4 @@
 import { ArrowUpRight } from 'lucide-react'
-import { motion, type MotionValue } from 'framer-motion'
 import type { MouseEvent } from 'react'
 import { GenerativeArt } from './GenerativeArt'
 import { LoanFlowVisual } from './LoanFlowVisual'
@@ -38,14 +37,9 @@ function StatusPill({ status }: { status: Project['status'] }) {
 export function ProjectCard({
   project,
   active,
-  parallaxY,
 }: {
   project: Project
   active: boolean
-  /** Drifts the visual panel at a different rate than the card shell while
-   * pinned (VISUAL_CRAFT.md bug #2) — omitted when the card isn't part of
-   * a scroll-linked stack. */
-  parallaxY?: MotionValue<number>
 }) {
   const ctaHref = project.live ?? project.github
   const ctaLabel = project.live ? 'View Live' : 'View Code'
@@ -88,20 +82,16 @@ export function ProjectCard({
       </div>
 
       <div className="relative min-h-[140px] flex-1 overflow-hidden rounded-2xl border border-[var(--color-border)]">
-        {/* Scaled up so the y-parallax translation never reveals an edge gap
-         * against the overflow-hidden panel around it. */}
-        <motion.div style={{ y: parallaxY }} className="h-full w-full scale-[1.15]">
-          {project.visual === 'generative-art' && (
-            <GenerativeArt active={active} className="h-full w-full" />
-          )}
-          {project.visual === 'wireframe' && (
-            <WireframeVisual active={active} className="h-full w-full" />
-          )}
-          {project.visual === 'loan-flow' && (
-            <LoanFlowVisual active={active} className="h-full w-full" />
-          )}
-          {!project.visual && <div className="project-card-bg h-full w-full" />}
-        </motion.div>
+        {project.visual === 'generative-art' && (
+          <GenerativeArt active={active} className="h-full w-full" />
+        )}
+        {project.visual === 'wireframe' && (
+          <WireframeVisual active={active} className="h-full w-full" />
+        )}
+        {project.visual === 'loan-flow' && (
+          <LoanFlowVisual active={active} className="h-full w-full" />
+        )}
+        {!project.visual && <div className="project-card-bg h-full w-full" />}
       </div>
 
       <p className="line-clamp-2 max-w-2xl text-[var(--color-muted)] md:text-lg">
