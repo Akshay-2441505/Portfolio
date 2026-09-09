@@ -37,7 +37,7 @@ export function Stats() {
     >
       {stats.map((stat) => (
         <div key={stat.label}>
-          <p className="font-mono text-4xl font-bold text-[var(--color-accent)] md:text-5xl">
+          <p className="font-mono text-4xl font-bold text-[var(--color-accent-primary)] md:text-5xl">
             <span data-stat-value={stat.value}>0</span>
             {stat.suffix}
           </p>

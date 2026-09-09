@@ -9,26 +9,16 @@
   --color-fg: #f2f0eb;
   --color-muted: #8a8a86;
   --color-border: rgba(242, 240, 235, 0.12);
-  /* Site identity/structure — sampled from the FIFA card's neon edge-glow
-   * (fifa-card.jpg), confirmed against the kickoff video's own glow. */
+  /* The site's one accent — a real color sampled from the FIFA card art
+   * back when that asset was live UI; kept as the single accent post-reset
+   * (RESET.md: 2-3 colors max, near-monochrome) since it's already wired
+   * through nav/links/selection/scrollbar rather than being resampled from
+   * scratch for no reason. */
   --color-accent-primary: #04f6fc;
-  /* "Happening right now" only — match clock stoppage time, IN BUILD tags,
-   * the FIFA card's build-status ribbon. Never used as general chrome. */
-  --color-accent-live: #ff5c35;
-  /* Presence-layer secondary hue — sampled from fifa-card.jpg's own
-   * background gradient (clean architectural-glass patch, top-left corner,
-   * averaged over ~1.4k px, hue ~205°). The card's gradient has no
-   * violet/indigo despite PALETTE.md's assumption — confirmed via direct
-   * pixel sampling (OpenCV) rather than guessed. This is the real value. */
-  --color-accent-secondary: #7f9bb3;
-  /* Confirmation states only (email sent, form submitted) — muted green,
-   * no source asset to sample, tuned by eye against the dark palette. */
-  --color-accent-success: #3fae7a;
-  /* Glow — soft falloff for accent-primary/accent-live chrome, replacing
-   * flat-color borders/fills wherever they're meant to read as emitting
-   * light rather than painted on. */
+  /* Glow — soft falloff for accent-primary chrome, replacing flat-color
+   * borders/fills wherever they're meant to read as emitting light rather
+   * than painted on. */
   --glow-primary: 0 0 24px color-mix(in srgb, var(--color-accent-primary) 55%, transparent);
-  --glow-live: 0 0 20px color-mix(in srgb, var(--color-accent-live) 55%, transparent);
 }
 
 html {
@@ -138,19 +128,6 @@ html {
   50% {
     background-position: 100% 50%;
   }
-}
-
-/* Match clock */
-.match-clock {
-  transition: border-color 0.3s ease, color 0.3s ease;
-}
-.match-clock.is-stoppage {
-  border-color: var(--color-accent-live);
-  color: var(--color-fg);
-}
-.match-clock.is-stoppage .clock-dot {
-  background: var(--color-accent-live);
-  box-shadow: var(--glow-live);
 }
 
 /* Film grain — oversized and nudged by steps() so it flickers like real

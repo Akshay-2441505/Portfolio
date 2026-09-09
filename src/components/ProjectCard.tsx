@@ -27,7 +27,7 @@ function StatusPill({ status }: { status: Project['status'] }) {
       className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-widest ${
         isLive
           ? 'border-[var(--color-accent-primary)] text-[var(--color-accent-primary)]'
-          : 'border-[var(--color-accent-live)] text-[var(--color-accent-live)]'
+          : 'border-[var(--color-muted)] text-[var(--color-muted)]'
       }`}
     >
       {isLive ? 'Live' : 'In Build'}
