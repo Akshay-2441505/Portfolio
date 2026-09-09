@@ -52,7 +52,11 @@ function CardStack() {
     const enteringEl = enteringName.current ? cardRefs.current.get(enteringName.current) : null
     const leavingEl = leavingName.current ? cardRefs.current.get(leavingName.current) : null
     if (enteringEl) {
-      gsap.from(enteringEl, { duration: 0.4, yPercent: 8, opacity: 0, ease: 'expo.out' })
+      gsap.fromTo(
+        enteringEl,
+        { opacity: 0, yPercent: 8 },
+        { opacity: 1, yPercent: 0, duration: 0.4, ease: 'expo.out' },
+      )
     }
     if (leavingEl) {
       gsap.to(leavingEl, { duration: 0.4, opacity: 0.5, ease: 'expo.out' })
