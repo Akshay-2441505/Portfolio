@@ -12,6 +12,7 @@ import { profile } from '../data/content'
 export function Preloader({ onComplete }: { onComplete: () => void }) {
   const rootRef = useRef<HTMLDivElement>(null)
   const nameRef = useRef<HTMLHeadingElement>(null)
+  const counterRef = useRef<HTMLSpanElement>(null)
   const [hidden, setHidden] = useState(false)
   const runExitRef = useRef<() => void>(() => {})
 
@@ -30,12 +31,34 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
     const split = nameRef.current
       ? new SplitText(nameRef.current, { type: 'chars' })
       : null
-    if (split) gsap.set(split.chars, { yPercent: 120, opacity: 0 })
+    // Bigger travel + a slight scale-in, not just a fade — a letter arriving
+    // from further away with its own scale pop reads as a distinct beat
+    // instead of blending into one soft fade-up.
+    if (split) gsap.set(split.chars, { yPercent: 160, opacity: 0, scale: 0.6 })
+
+    // Ticking counter fills what was dead air (a static label doing nothing
+    // for 1.6s) with actual motion, so the boot sequence reads as "loading"
+    // rather than "stalled, then a name appears."
+    const counter = { v: 0 }
+    if (counterRef.current) {
+      counterRef.current.textContent = '000'
+    }
+    const counterTween = gsap.to(counter, {
+      v: 100,
+      duration: 1.6,
+      ease: 'power1.inOut',
+      onUpdate: () => {
+        if (counterRef.current) {
+          counterRef.current.textContent = String(Math.floor(counter.v)).padStart(3, '0')
+        }
+      },
+    })
 
     let exitStarted = false
     function runExit() {
       if (exitStarted) return
       exitStarted = true
+      counterTween.kill()
       const tl = gsap.timeline({
         onComplete: () => {
           document.body.style.overflow = ''
@@ -44,21 +67,27 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
         },
       })
       if (split) {
+        // Wider per-letter gap (0.07s) and a longer individual duration
+        // (1.0s) than before — the previous 0.04/0.8 combo cascaded across
+        // barely half a second, easy to miss entirely. This spreads "Akshay
+        // Kurdekar"'s ~14 letters across roughly a full second of visible,
+        // one-after-another arrival.
         tl.to(
           split.chars,
-          { yPercent: 0, opacity: 1, duration: 0.8, stagger: 0.04, ease: 'expo.out' },
+          { yPercent: 0, opacity: 1, scale: 1, duration: 1, stagger: 0.07, ease: 'expo.out' },
           0,
         )
       }
-      tl.to(rootRef.current, { yPercent: -100, duration: 0.8, ease: 'expo.inOut' }, '+=0.6')
+      tl.to(rootRef.current, { yPercent: -100, duration: 0.8, ease: 'expo.inOut' }, '+=0.5')
     }
     runExitRef.current = runExit
 
-    // Paces the boot sequence without a video to key off — long enough for
-    // the stagger to read, short enough not to feel like a stall.
+    // Paces the boot sequence — long enough for the counter to visibly climb
+    // and the stagger to read as its own beat, short enough not to stall.
     const timer = window.setTimeout(runExit, 1800)
 
     return () => {
+      counterTween.kill()
       split?.revert()
       window.clearTimeout(timer)
       document.body.style.overflow = ''
@@ -85,6 +114,9 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
       </h1>
       <div className="relative flex items-end justify-between font-mono text-xs uppercase tracking-widest text-[var(--color-muted)]">
         <span>{profile.location}</span>
+        <span ref={counterRef} className="text-2xl text-[var(--color-fg)]">
+          000
+        </span>
       </div>
       <p className="relative self-end font-mono text-[10px] uppercase tracking-widest text-[var(--color-muted)]">
         Skip →

@@ -52,12 +52,18 @@ export function FooterMorph() {
 
       const trigger = ScrollTrigger.create({
         trigger: rootRef.current,
-        start: 'bottom bottom',
+        // 'bottom bottom' required scrolling to the literal last pixel of
+        // the page (past this block, past the copyright line) — in normal
+        // use, most visitors never reach that exact point once they've seen
+        // the contact info, so the beat almost never fired. 'top 85%' fires
+        // as soon as this block starts entering from the bottom of the
+        // viewport, which normal scrolling reliably passes through.
+        start: 'top 85%',
         once: true,
         onEnter: () => {
           gsap
             .timeline()
-            .to(shape, { morphSVG: { shape: BLOB_PATH }, duration: 1, ease: 'power2.inOut' })
+            .to(shape, { morphSVG: { shape: BLOB_PATH }, duration: 1.1, ease: 'power2.inOut' })
             .to(
               split.words,
               { opacity: 1, yPercent: 0, duration: 0.6, stagger: 0.1, ease: 'expo.out' },
@@ -76,13 +82,13 @@ export function FooterMorph() {
 
   return (
     <div ref={rootRef} className="mt-16 flex flex-col items-center gap-4">
-      <svg ref={svgRef} width="72" height="72" viewBox="0 0 100 100" aria-hidden="true">
+      <svg ref={svgRef} width="120" height="120" viewBox="0 0 100 100" aria-hidden="true">
         <circle
           cx="50"
           cy="50"
           r="40"
           fill="var(--color-accent-primary)"
-          opacity="0.5"
+          opacity="0.85"
         />
       </svg>
       <p

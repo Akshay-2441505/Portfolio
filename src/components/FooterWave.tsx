@@ -8,7 +8,10 @@ import { gsap, ScrollTrigger } from '../lib/gsap'
 // visitor was scrolling when the footer entered view (EFFECTS_PLAN.md, ref:
 // "Footer Bounce Based on Scroll Speed").
 const FLAT_Y = 40
-const BULGE_Y = -10
+// -10 (a 50-unit swing against a 120-unit viewBox) read as barely-there
+// against the previous fix's low-contrast fill — bumped to a swing big
+// enough to actually register as a bounce, not just a shimmer.
+const BULGE_Y = -32
 
 export function FooterWave() {
   const pathRef = useRef<SVGPathElement>(null)
@@ -66,17 +69,22 @@ export function FooterWave() {
       ref={rootRef}
       aria-hidden="true"
       className="pointer-events-none absolute -top-[1px] left-0 w-full"
-      height="40"
+      height="60"
       viewBox="0 0 1200 120"
       preserveAspectRatio="none"
     >
-      {/* --color-surface (#111) against the body's near-black vignette is
-       * ~1.05:1 — the bounce was technically running but invisible. A low-mix
-       * accent tint reads as a subtle lit edge without introducing a new
-       * color token or giving Contact a whole opaque surface. */}
+      {/* --color-surface (#111) against the body's near-black vignette was
+       * ~1.05:1 — invisible. A 22% accent mix only got to ~1.8:1, still too
+       * close to the background to register. This goes most of the way to
+       * the full accent color, with a matching glow, so the edge actually
+       * reads as "lit" rather than a faint shimmer. */}
       <path
         ref={pathRef}
-        fill="color-mix(in srgb, var(--color-accent-primary) 22%, var(--color-surface))"
+        fill="color-mix(in srgb, var(--color-accent-primary) 85%, var(--color-surface))"
+        style={{
+          filter:
+            'drop-shadow(0 0 18px color-mix(in srgb, var(--color-accent-primary) 60%, transparent))',
+        }}
       />
     </svg>
   )
