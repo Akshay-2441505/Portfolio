@@ -1,18 +1,24 @@
 import { FadeIn } from './FadeIn'
+import { HorizontalText } from './HorizontalText'
 import { Stats } from './Stats'
-import { about, education } from '../data/content'
+import { about, education, profile } from '../data/content'
 
 export function About() {
   return (
-    <section id="about" className="px-6 py-24 md:px-10 md:py-32">
-      <div className="mx-auto max-w-3xl">
+    <section id="about" className="py-24 md:py-32">
+      <div className="mx-auto max-w-3xl px-6 md:px-10">
         <FadeIn>
           <h2 className="text-4xl font-bold uppercase tracking-tight md:text-6xl">
             About
           </h2>
         </FadeIn>
+      </div>
+
+      <HorizontalText text={profile.tagline} />
+
+      <div className="mx-auto max-w-3xl px-6 md:px-10">
         <FadeIn delay={0.1}>
-          <p className="mt-8 text-lg leading-relaxed text-[var(--color-muted)] md:text-xl">
+          <p className="text-lg leading-relaxed text-[var(--color-muted)] md:text-xl">
             {about.paragraph}
           </p>
         </FadeIn>
