@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { About } from './components/About'
+import { CanvasParticles } from './components/CanvasParticles'
 import { Contact } from './components/Contact'
 import { CustomCursor } from './components/CustomCursor'
 import { Experience } from './components/Experience'
@@ -41,6 +42,7 @@ function App() {
         />
       )}
       <div className="grain-overlay" />
+      <CanvasParticles />
       <CustomCursor />
       <div className="relative">
         <Nav />
