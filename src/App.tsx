@@ -3,6 +3,7 @@ import { About } from './components/About'
 import { CanvasParticles } from './components/CanvasParticles'
 import { Contact } from './components/Contact'
 import { CustomCursor } from './components/CustomCursor'
+import { CursorTrail } from './components/CursorTrail'
 import { Experience } from './components/Experience'
 import { Hero } from './components/Hero'
 import { Marquee } from './components/Marquee'
@@ -44,6 +45,7 @@ function App() {
       <div className="grain-overlay" />
       <CanvasParticles />
       <CustomCursor />
+      <CursorTrail />
       <div className="relative">
         <Nav />
         <Hero revealReady={!loading} />
