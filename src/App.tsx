@@ -1,9 +1,7 @@
 import { useState } from 'react'
 import { About } from './components/About'
-import { CanvasParticles } from './components/CanvasParticles'
 import { Contact } from './components/Contact'
 import { CustomCursor } from './components/CustomCursor'
-import { CursorTrail } from './components/CursorTrail'
 import { Experience } from './components/Experience'
 import { Hero } from './components/Hero'
 import { Marquee } from './components/Marquee'
@@ -43,9 +41,13 @@ function App() {
         />
       )}
       <div className="grain-overlay" />
-      <CanvasParticles />
+      {/* CursorTrail and CanvasParticles were built on a trial basis
+       * (EFFECTS_PLAN.md's experimental trio) and cut in the Task 13 QA pass
+       * — the trail duplicated CustomCursor's dot+ring vocabulary, and the
+       * particle field read as noise in the negative space the minimal
+       * design depends on. Both components stay on disk, unmounted, matching
+       * this codebase's convention for superseded code. */}
       <CustomCursor />
-      <CursorTrail />
       <div className="relative">
         <Nav />
         <Hero revealReady={!loading} />
