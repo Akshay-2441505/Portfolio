@@ -4,6 +4,7 @@ import { FadeIn } from './FadeIn'
 import { GithubMark, LinkedinMark } from './icons/BrandIcons'
 import { Magnetic } from './Magnetic'
 import { FooterWave } from './FooterWave'
+import { FooterMorph } from './FooterMorph'
 import { gsap } from '../lib/gsap'
 import { motionTokens } from '../lib/motion'
 import { fullTime, profile } from '../data/content'
@@ -85,6 +86,7 @@ export function Contact() {
             </a>
           </div>
         </FadeIn>
+        <FooterMorph />
       </div>
 
       <p className="mt-24 text-center font-mono text-xs uppercase tracking-widest text-[var(--color-muted)]">
