@@ -61,9 +61,15 @@ export function FooterMorph() {
         start: 'top 85%',
         once: true,
         onEnter: () => {
+          // A scale pulse on the whole SVG, synced with the shape morph —
+          // insurance against the transformation being too subtle to
+          // register even when it's working correctly: a size change is
+          // much harder to miss than a shape change alone at this size.
           gsap
             .timeline()
-            .to(shape, { morphSVG: { shape: BLOB_PATH }, duration: 1.1, ease: 'power2.inOut' })
+            .to(svg, { scale: 1.25, duration: 0.5, ease: 'power2.out' }, 0)
+            .to(svg, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' }, 0.5)
+            .to(shape, { morphSVG: { shape: BLOB_PATH }, duration: 1.1, ease: 'power2.inOut' }, 0)
             .to(
               split.words,
               { opacity: 1, yPercent: 0, duration: 0.6, stagger: 0.1, ease: 'expo.out' },

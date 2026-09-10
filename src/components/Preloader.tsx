@@ -31,10 +31,13 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
     const split = nameRef.current
       ? new SplitText(nameRef.current, { type: 'chars' })
       : null
-    // Bigger travel + a slight scale-in, not just a fade — a letter arriving
-    // from further away with its own scale pop reads as a distinct beat
-    // instead of blending into one soft fade-up.
-    if (split) gsap.set(split.chars, { yPercent: 160, opacity: 0, scale: 0.6 })
+    // A rotation + overshoot per letter, not just a fade-up — the reference
+    // demo (GSAP 101 - Staggers) reads as obviously staggered because each
+    // box has its own big, distinct transform (a full 360° spin) that the
+    // eye can track arriving one at a time. A vertical slide alone on a
+    // single word blurs into one soft wave; a per-letter rotation snap does
+    // not.
+    if (split) gsap.set(split.chars, { yPercent: 100, opacity: 0, scale: 0.4, rotation: -25 })
 
     // Ticking counter fills what was dead air (a static label doing nothing
     // for 1.6s) with actual motion, so the boot sequence reads as "loading"
@@ -67,16 +70,20 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
         },
       })
       if (split) {
-        // Wider per-letter gap (0.07s) and a longer individual duration
-        // (1.0s) than before — the previous 0.04/0.8 combo cascaded across
-        // barely half a second, easy to miss entirely. This spreads "Akshay
-        // Kurdekar"'s ~14 letters across roughly a full second of visible,
-        // one-after-another arrival.
-        tl.to(
-          split.chars,
-          { yPercent: 0, opacity: 1, scale: 1, duration: 1, stagger: 0.07, ease: 'expo.out' },
-          0,
-        )
+        // 0.1s stagger (matching the reference demo's own value) across
+        // ~14 letters spreads the cascade across ~1.6s of clearly one-after-
+        // another arrivals, not a half-second blur. back.out gives each
+        // letter a small overshoot snap on landing — the same "distinct,
+        // trackable per-element motion" the demo's 360° box rotation has.
+        tl.to(split.chars, {
+          yPercent: 0,
+          opacity: 1,
+          scale: 1,
+          rotation: 0,
+          duration: 0.9,
+          stagger: 0.1,
+          ease: 'back.out(1.7)',
+        }, 0)
       }
       tl.to(rootRef.current, { yPercent: -100, duration: 0.8, ease: 'expo.inOut' }, '+=0.5')
     }

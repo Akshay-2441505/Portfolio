@@ -41,8 +41,19 @@ export function HorizontalText({ text }: { text: string }) {
         ease: 'none',
         scrollTrigger: {
           trigger: wrapper,
-          start: 'top top',
-          end: () => `+=${distance() + window.innerHeight}`,
+          // 'top top' pinned as soon as the wrapper's edge touched the very
+          // top of the viewport — while the visitor was still arriving,
+          // before the section felt "reached." Triggering once it's
+          // comfortably centered reads as intentional instead of early.
+          start: 'center center',
+          // Previously scaled to the text's own width plus a full viewport
+          // height — at the larger type size that's 1000px+ of required
+          // scroll, well beyond a single scroll gesture. Most visitors
+          // pause partway through and land on a half-revealed, cut-off
+          // sentence. A short, fixed range is very likely to be covered by
+          // one continuous scroll motion, so the reveal actually completes
+          // before a natural pause.
+          end: '+=450',
           scrub: true,
           pin: true,
           invalidateOnRefresh: true,

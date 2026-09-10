@@ -8,10 +8,13 @@ import { gsap, ScrollTrigger } from '../lib/gsap'
 // visitor was scrolling when the footer entered view (EFFECTS_PLAN.md, ref:
 // "Footer Bounce Based on Scroll Speed").
 const FLAT_Y = 40
-// -10 (a 50-unit swing against a 120-unit viewBox) read as barely-there
-// against the previous fix's low-contrast fill — bumped to a swing big
-// enough to actually register as a bounce, not just a shimmer.
-const BULGE_Y = -32
+// Anything more negative than roughly -40 pushes the curve's peak above
+// y=0 — outside the viewBox — so instead of a bigger wave it just clips
+// into a flat filled rectangle (no visible curve at all, just a static
+// bar). -25 stays inside the frame so the bulge still reads as a curved
+// bounce; the SVG's own rendered height (below) is what got doubled to
+// make the whole thing read as bigger.
+const BULGE_Y = -25
 
 export function FooterWave() {
   const pathRef = useRef<SVGPathElement>(null)
@@ -69,7 +72,7 @@ export function FooterWave() {
       ref={rootRef}
       aria-hidden="true"
       className="pointer-events-none absolute -top-[1px] left-0 w-full"
-      height="60"
+      height="110"
       viewBox="0 0 1200 120"
       preserveAspectRatio="none"
     >
