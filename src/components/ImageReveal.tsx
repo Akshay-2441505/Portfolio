@@ -52,7 +52,17 @@ export function ImageReveal({ src, alt }: { src: string; alt: string }) {
       ref={sectionRef}
       className="relative mt-16 overflow-hidden rounded-2xl border border-[var(--color-border)]"
     >
-      <img src={src} alt={alt} className="block w-full object-cover" />
+      {/* Intrinsic size of /akshay-photo.jpg — reserves the aspect ratio so
+       * the box doesn't collapse and reflow when the image lands. Below the
+       * fold, so it loads lazily. */}
+      <img
+        src={src}
+        alt={alt}
+        width={490}
+        height={580}
+        loading="lazy"
+        className="block h-auto w-full object-cover"
+      />
       <div
         ref={panelRef}
         style={{ transformOrigin: 'right center' }}

@@ -70,7 +70,14 @@ export function FooterWave() {
       viewBox="0 0 1200 120"
       preserveAspectRatio="none"
     >
-      <path ref={pathRef} fill="var(--color-surface)" />
+      {/* --color-surface (#111) against the body's near-black vignette is
+       * ~1.05:1 — the bounce was technically running but invisible. A low-mix
+       * accent tint reads as a subtle lit edge without introducing a new
+       * color token or giving Contact a whole opaque surface. */}
+      <path
+        ref={pathRef}
+        fill="color-mix(in srgb, var(--color-accent-primary) 22%, var(--color-surface))"
+      />
     </svg>
   )
 }

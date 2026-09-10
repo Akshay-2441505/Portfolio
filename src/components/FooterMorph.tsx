@@ -15,20 +15,38 @@ const BLOB_PATH =
 
 export function FooterMorph() {
   const rootRef = useRef<HTMLDivElement>(null)
-  const circleRef = useRef<SVGCircleElement>(null)
+  const svgRef = useRef<SVGSVGElement>(null)
   const wordsRef = useRef<HTMLParagraphElement>(null)
 
   useGSAP(
     () => {
-      const circle = circleRef.current
+      const svg = svgRef.current
       const words = wordsRef.current
-      if (!circle || !words) return
+      if (!svg || !words) return
       const prefersReducedMotion = window.matchMedia(
         '(prefers-reduced-motion: reduce)',
       ).matches
       if (prefersReducedMotion) return
 
-      MorphSVGPlugin.convertToPath(circle)
+      // convertToPath REPLACES the <circle> with a brand-new <path> and
+      // returns it, so the tween must target the return value — the original
+      // node is detached from here on.
+      //
+      // Resolve that node from the live DOM rather than from a ref captured
+      // at mount: this effect runs twice under StrictMode in dev (and again
+      // on any HMR update), and by the second run a stored circle ref points
+      // at the already-detached original. Converting *that* yields a path
+      // that was never in the document, so the morph silently animates an
+      // orphan — no console warning, no visible change. Re-reading the SVG
+      // and only converting while it's still a circle makes this idempotent.
+      const current = svg.querySelector('circle, path') as
+        | SVGCircleElement
+        | SVGPathElement
+        | null
+      if (!current) return
+      const shape =
+        current instanceof SVGCircleElement ? MorphSVGPlugin.convertToPath(current)[0] : current
+
       const split = new SplitText(words, { type: 'words' })
       gsap.set(split.words, { opacity: 0, yPercent: 40 })
 
@@ -39,7 +57,7 @@ export function FooterMorph() {
         onEnter: () => {
           gsap
             .timeline()
-            .to(circle, { morphSVG: { shape: BLOB_PATH }, duration: 1, ease: 'power2.inOut' })
+            .to(shape, { morphSVG: { shape: BLOB_PATH }, duration: 1, ease: 'power2.inOut' })
             .to(
               split.words,
               { opacity: 1, yPercent: 0, duration: 0.6, stagger: 0.1, ease: 'expo.out' },
@@ -58,9 +76,8 @@ export function FooterMorph() {
 
   return (
     <div ref={rootRef} className="mt-16 flex flex-col items-center gap-4">
-      <svg width="72" height="72" viewBox="0 0 100 100" aria-hidden="true">
+      <svg ref={svgRef} width="72" height="72" viewBox="0 0 100 100" aria-hidden="true">
         <circle
-          ref={circleRef}
           cx="50"
           cy="50"
           r="40"

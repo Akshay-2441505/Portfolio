@@ -12,6 +12,16 @@ import { moreWork, projects } from '../data/content'
  * send the front card to the back; Flip animates every card's position in
  * one pass, with the demo's own onEnter/onLeave treatment for the card
  * arriving at the front and the one leaving it. */
+/** The stack's resting transform for a card at a given depth. Defined once
+ * because it's needed in two places: React's declared inline style, and the
+ * settle step after a Flip (clearProps can't be used to hand the transform
+ * back to React — React only writes style props on render, so clearing the
+ * inline transform without a re-render would drop the depth offset entirely
+ * until the next click). */
+function depthTransform(depth: number) {
+  return `translateY(${depth * 10}px) scale(${1 - depth * 0.03})`
+}
+
 function CardStack() {
   const [order, setOrder] = useState(() => projects.map((p) => p.name))
   const cardRefs = useRef(new Map<string, HTMLDivElement>())
@@ -25,8 +35,15 @@ function CardStack() {
   // tweens on these two elements instead.
   const enteringName = useRef<string | null>(null)
   const leavingName = useRef<string | null>(null)
+  // The section's own copy invites rapid clicking ("Click the stack to cycle
+  // →"). Without this, a second cycle mid-flight stacks Flip transforms on
+  // top of unfinished ones (cards drift permanently off-position) and can
+  // strand the entering card at opacity 0 by interrupting its fade-in.
+  const isAnimatingRef = useRef(false)
 
   function cycle() {
+    if (isAnimatingRef.current) return
+    isAnimatingRef.current = true
     pendingFlipState.current = Flip.getState(Array.from(cardRefs.current.values()))
     leavingName.current = order[0]
     enteringName.current = order[1]
@@ -42,24 +59,66 @@ function CardStack() {
     if (!state) return
     pendingFlipState.current = null
 
-    Flip.from(state, {
-      targets: Array.from(cardRefs.current.values()),
+    const cards = Array.from(cardRefs.current.values())
+    const enteringEl = enteringName.current ? cardRefs.current.get(enteringName.current) : null
+    const leavingEl = leavingName.current ? cardRefs.current.get(leavingName.current) : null
+
+    // Snap every card back to its exact declared resting transform. GSAP's
+    // last-set inline values are otherwise left sitting on the elements
+    // permanently, which is how repeated cycles accumulate drift.
+    function settle() {
+      order.forEach((name, depth) => {
+        const el = cardRefs.current.get(name)
+        if (!el) return
+        // clearProps first so GSAP drops its cached transform for this
+        // element, then write the declared value straight to the DOM — the
+        // next tween re-parses it instead of composing onto a stale cache.
+        // Scoped to transform on purpose: zIndex is React's, and the dimmed
+        // opacity on back-of-stack cards is intentional state, not residue.
+        gsap.set(el, { clearProps: 'transform' })
+        el.style.transform = depthTransform(depth)
+      })
+      isAnimatingRef.current = false
+    }
+
+    // Reduced motion: the reorder already happened via React state, so the
+    // stack is correct — skip the animated transition entirely.
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      settle()
+      return
+    }
+
+    const flip = Flip.from(state, {
+      targets: cards,
       duration: 0.6,
       ease: 'sine.inOut',
       absolute: true,
+      onComplete: settle,
     })
 
-    const enteringEl = enteringName.current ? cardRefs.current.get(enteringName.current) : null
-    const leavingEl = leavingName.current ? cardRefs.current.get(leavingName.current) : null
+    const tweens: gsap.core.Animation[] = [flip]
     if (enteringEl) {
-      gsap.fromTo(
-        enteringEl,
-        { opacity: 0, yPercent: 8 },
-        { opacity: 1, yPercent: 0, duration: 0.4, ease: 'expo.out' },
+      tweens.push(
+        gsap.fromTo(
+          enteringEl,
+          { opacity: 0, yPercent: 8 },
+          {
+            opacity: 1,
+            yPercent: 0,
+            duration: 0.4,
+            ease: 'expo.out',
+            clearProps: 'opacity',
+          },
+        ),
       )
     }
     if (leavingEl) {
-      gsap.to(leavingEl, { duration: 0.4, opacity: 0.5, ease: 'expo.out' })
+      tweens.push(gsap.to(leavingEl, { duration: 0.4, opacity: 0.5, ease: 'expo.out' }))
+    }
+
+    return () => {
+      tweens.forEach((t) => t.kill())
+      isAnimatingRef.current = false
     }
   }, [order])
 
@@ -89,7 +148,7 @@ function CardStack() {
             className="absolute inset-0"
             style={{
               zIndex: order.length - depth,
-              transform: `translateY(${depth * 10}px) scale(${1 - depth * 0.03})`,
+              transform: depthTransform(depth),
             }}
           >
             <ProjectCard project={project} active={depth === 0} />

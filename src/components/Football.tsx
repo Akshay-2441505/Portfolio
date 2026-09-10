@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import type { Group, Mesh } from 'three'
+import type { Group } from 'three'
 import { BufferAttribute, IcosahedronGeometry } from 'three'
 
 /** Procedural low-poly football — the site's single 3D wow object
@@ -50,15 +50,15 @@ export function Football({
    * rotation a parent scene applies on top of this component's group. */
   spin?: number
 }) {
-  const meshRef = useRef<Mesh>(null)
   const groupRef = useRef<Group>(null)
 
   const geometry = useMemo(() => {
-    // detail 1 subdivides each of the icosahedron's 20 faces into 4,
-    // giving 80 flat-shaded triangles — enough to read as a faceted ball
-    // without needing per-vertex smoothing or an external mesh.
-    const geo = new IcosahedronGeometry(radius, 1)
-    geo.toNonIndexed() // each triangle needs its own 3 vertices to color independently
+    // detail 2 subdivides each of the icosahedron's 20 faces into 16, giving
+    // 320 flat-shaded triangles — fine enough that the panel pattern reads as
+    // a football's panels rather than a rough polyhedron. IcosahedronGeometry
+    // is already non-indexed, so each triangle owns its 3 vertices and can be
+    // colored independently with no conversion step.
+    const geo = new IcosahedronGeometry(radius, 2)
     geo.computeVertexNormals()
     buildPanelColors(geo)
     return geo
@@ -70,14 +70,16 @@ export function Football({
 
   return (
     <group ref={groupRef}>
-      <mesh ref={meshRef} geometry={geometry}>
+      <mesh geometry={geometry}>
+        {/* No emissive: a cyan self-glow pulled both panel colors toward the
+         * same teal, flattening the two-tone contrast the pattern exists for.
+         * The scene's cyan pointLight still tints the ball, but as light on a
+         * surface — the light/dark panels stay distinguishable. */}
         <meshStandardMaterial
           vertexColors
           flatShading
           roughness={0.35}
           metalness={0.1}
-          emissive="#04f6fc"
-          emissiveIntensity={0.15}
           toneMapped={false}
         />
       </mesh>

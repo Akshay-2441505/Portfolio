@@ -1,6 +1,11 @@
 import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
-import { gsap, SplitText } from '../lib/gsap'
+import { gsap } from '../lib/gsap'
+
+/** Below this many px of overflow there's nothing worth pinning the page for
+ * — the tween would animate ~0px while ScrollTrigger still ate a full
+ * viewport of scroll. */
+const MIN_SCROLL_DISTANCE = 20
 
 /** Pinned horizontal-scroll line (EFFECTS_PLAN.md, ref: "ContainerAnimation
  * SplitText"). Its own home, not the site's wow moment — that's the Hero
@@ -21,18 +26,26 @@ export function HorizontalText({ text }: { text: string }) {
       ).matches
       if (prefersReducedMotion) return
 
-      SplitText.create(el, { type: 'chars, words' })
+      // Recomputed on every ScrollTrigger refresh (incl. resize) rather than
+      // captured once at mount, so a window resize can't leave the pin
+      // distance and the tween disagreeing.
+      const distance = () => Math.max(0, el.scrollWidth - wrapper.clientWidth)
 
-      const scrollDistance = Math.max(0, el.scrollWidth - wrapper.clientWidth)
+      // At desktop widths the tagline fits, so there's no horizontal distance
+      // to cover. Pinning anyway would freeze the page for a viewport-height
+      // of scroll with zero visible motion — so just leave it in static flow.
+      if (distance() < MIN_SCROLL_DISTANCE) return
+
       const tween = gsap.to(el, {
-        x: -scrollDistance,
+        x: () => -distance(),
         ease: 'none',
         scrollTrigger: {
           trigger: wrapper,
           start: 'top top',
-          end: () => `+=${scrollDistance + window.innerHeight}`,
+          end: () => `+=${distance() + window.innerHeight}`,
           scrub: true,
           pin: true,
+          invalidateOnRefresh: true,
         },
       })
 

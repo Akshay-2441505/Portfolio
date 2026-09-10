@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { PerformanceMonitor } from '@react-three/drei'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import type { Group } from 'three'
@@ -9,9 +9,9 @@ import { useScrollScrub } from '../hooks/useScrollScrub'
 import { scrollVelocity } from '../lib/scrollVelocity'
 
 /** Real WebGL scene replacing the old canvas-2D particle network
- * (WEBGL_UPGRADE.md). Extends the crystal-shard language already
- * established on the FIFA Card, cursor-reactive, scroll-driven, with a
- * bloom pass so the shard edges actually read as emitting light. */
+ * (WEBGL_UPGRADE.md). Holds the site's single 3D object — the procedural
+ * faceted football (RESET.md) — cursor-reactive and scroll-driven, with a
+ * bloom pass so its lit facet edges read as catching light. */
 
 function HeroSceneContent({
   progress,
@@ -20,6 +20,16 @@ function HeroSceneContent({
 }) {
   const pointer = useRef({ x: 0, y: 0 })
   const groupRef = useRef<Group>(null)
+
+  // Size the ball against the frustum, not a fixed world radius. A fixed 1.4
+  // was wider than the ~2.15 world units visible at a 375px viewport, so it
+  // bled off both edges; even at 1.0 it filled 93% of the width and washed
+  // out the sub-line and meta-line sitting on top of it. Capping the diameter
+  // at ~56% of the visible width keeps it clearly a ball on phones while
+  // desktop still gets the full 1.0. r3f recomputes viewport on resize, so
+  // this needs no listener of its own.
+  const viewportWidth = useThree((state) => state.viewport.width)
+  const radius = Math.min(1.0, viewportWidth * 0.28)
 
   useEffect(() => {
     function handleMove(e: PointerEvent) {
@@ -46,7 +56,7 @@ function HeroSceneContent({
 
   return (
     <group ref={groupRef}>
-      <Football radius={1.4} spin={0.12} />
+      <Football radius={radius} spin={0.12} />
     </group>
   )
 }

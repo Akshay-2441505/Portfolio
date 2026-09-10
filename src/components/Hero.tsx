@@ -50,9 +50,13 @@ export function Hero({ revealReady }: { revealReady: boolean }) {
   }, [revealReady])
 
   return (
+    /* `isolate` is load-bearing, not decoration: the WebGL layer below sits at
+     * -z-10, and without a stacking context on this section that layer
+     * resolves against the ROOT one — painting underneath body's opaque
+     * radial-gradient background, so the football renders but is invisible. */
     <section
       id="top"
-      className="relative flex h-screen flex-col justify-between overflow-hidden px-6 pt-24 pb-10 md:px-10"
+      className="relative isolate flex h-screen flex-col justify-between overflow-hidden px-6 pt-24 pb-10 md:px-10"
     >
       <div className="pointer-events-none absolute inset-0 -z-10 h-full w-full">
         {webglSupported ? (
