@@ -1,5 +1,6 @@
 import { FadeIn } from './FadeIn'
 import { HorizontalText } from './HorizontalText'
+import { ImageReveal } from './ImageReveal'
 import { Stats } from './Stats'
 import { about, education, profile } from '../data/content'
 
@@ -22,6 +23,8 @@ export function About() {
             {about.paragraph}
           </p>
         </FadeIn>
+
+        <ImageReveal src="/akshay-photo.jpg" alt="Akshay Kurdekar" />
 
         <div className="mt-16 grid gap-8 border-t border-[var(--color-border)] pt-10 sm:grid-cols-2">
           {education.map((item, i) => (
