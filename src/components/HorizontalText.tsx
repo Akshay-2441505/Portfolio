@@ -48,7 +48,7 @@ export function HorizontalText({ text }: { text: string }) {
     <div ref={wrapperRef} className="overflow-hidden py-12">
       <h3
         ref={textRef}
-        className="flex w-max items-center whitespace-nowrap pl-6 text-3xl font-medium tracking-tight md:pl-10 md:text-5xl"
+        className="w-max whitespace-nowrap pl-6 text-3xl font-medium tracking-tight md:pl-10 md:text-5xl"
       >
         {text}
       </h3>
