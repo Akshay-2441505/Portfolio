@@ -8,7 +8,7 @@ export function Experience() {
     <section className="px-6 py-24 md:px-10 md:py-32">
       <FadeIn>
         <h2 className="text-4xl font-bold uppercase tracking-tight md:text-6xl">
-          Appearances
+          Work Experience
         </h2>
       </FadeIn>
 
@@ -23,7 +23,7 @@ export function Experience() {
           <thead>
             <tr className="border-b border-[var(--color-border)]">
               <th className="pb-4 pr-4 font-mono text-xs font-normal uppercase tracking-widest text-[var(--color-muted)]">
-                Club
+                Company
               </th>
               <th className="pb-4 pr-4 font-mono text-xs font-normal uppercase tracking-widest text-[var(--color-muted)]">
                 Role

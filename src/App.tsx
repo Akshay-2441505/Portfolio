@@ -4,7 +4,6 @@ import { Contact } from './components/Contact'
 import { CustomCursor } from './components/CustomCursor'
 import { Experience } from './components/Experience'
 import { Hero } from './components/Hero'
-import { Marquee } from './components/Marquee'
 import { Nav } from './components/Nav'
 import { Preloader } from './components/Preloader'
 import { Projects } from './components/Projects'
@@ -51,7 +50,6 @@ function App() {
       <div className="relative">
         <Nav />
         <Hero revealReady={!loading} />
-        <Marquee />
         <About />
         <Skills />
         <Experience />

@@ -1,10 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
-import { Magnetic } from './Magnetic'
 import { ScrambleText } from './ScrambleText'
 import { useActiveSection } from '../hooks/useActiveSection'
-import { profile } from '../data/content'
 
 const links = [
   { label: 'About', href: '#about', id: 'about', number: 1 },
@@ -17,14 +15,14 @@ export function Nav() {
   const active = useActiveSection(links.map((link) => link.id))
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-5 md:px-10 font-mono text-xs uppercase tracking-widest backdrop-blur-sm">
-      <Magnetic strength={8}>
-        <a href="#top" className="text-[var(--color-fg)]">
-          {profile.initials}
-        </a>
-      </Magnetic>
+    <header className="fixed top-0 left-0 right-0 z-50 grid grid-cols-[1fr_auto_1fr] items-center px-6 py-5 md:px-10 font-mono text-xs uppercase tracking-widest backdrop-blur-sm">
+      {/* Empty first column — keeps the desktop nav links centered via the
+       * grid's middle track even with nothing in the left slot, rather than
+       * a flex justify-between that would shift them flush-left once the
+       * old logo mark that used to anchor this side was removed. */}
+      <div aria-hidden="true" />
 
-      <nav className="hidden gap-8 md:flex">
+      <nav className="col-start-2 hidden gap-8 md:flex">
         {links.map((link) => (
           <a
             key={link.href}
@@ -47,7 +45,7 @@ export function Nav() {
         ))}
       </nav>
 
-      <div className="flex items-center gap-4">
+      <div className="col-start-3 flex items-center justify-self-end gap-4">
         <button
           type="button"
           onClick={() => setMenuOpen((open) => !open)}

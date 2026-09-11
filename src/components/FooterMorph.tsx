@@ -1,28 +1,35 @@
 import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
-import { gsap, MorphSVGPlugin, ScrollTrigger, SplitText } from '../lib/gsap'
+import { gsap, MorphSVGPlugin, ScrollTrigger } from '../lib/gsap'
+import { fullTime } from '../data/content'
 
-// A farewell beat (EFFECTS_PLAN.md, ref: MorphSVG convertToPath()) — the
-// reference clip morphs three SEPARATE shapes (triangle/square/circle),
-// each into its own letter (A/B/C), looping back and forth continuously
-// (repeat + yoyo) rather than running once and stopping. Earlier versions
-// of this got both of those wrong: one shape cycling sequentially through
-// every letter at a single spot, and a one-shot `once: true` trigger. This
-// version uses one small circle per letter — S, E, E, Y, A — laid out side
-// by side, each independently converting to its own path and looping
-// between circle and letter forever once triggered.
+// Contact's headline (EFFECTS_PLAN.md, ref: MorphSVG convertToPath()) — was
+// a small standalone "See Ya." beat near the footer; the user asked for the
+// same shape-per-letter morph technique applied directly to the section's
+// actual heading instead. One small circle per letter, laid out in word
+// groups so the row wraps the same way the text itself would, each circle
+// independently converting to a path and looping between circle and letter
+// forever (repeat + yoyo) once scrolled into view.
 //
 // MorphSVGPlugin has no font-outline pipeline to derive glyph shapes from a
-// string — those letterforms in the reference are an asset GreenSock drew
-// by hand, not something the plugin generates. Same approach here: simple
-// straight-edged block letters (a stencil-font look, matching the site's
-// geometric minimalism), authored as small bitmaps and turned into rect-
-// union paths below.
+// string — these letterforms are hand-authored 6x8 bitmaps turned into
+// rect-union paths (a stencil-font look, matching the site's geometric
+// minimalism), same approach as the previous "See Ya." version. N and W are
+// the two hardest letters to render cleanly on a 6-wide grid — both are
+// approximations, not as clean as the others.
 const LETTER_BITMAPS: Record<string, string[]> = {
-  S: ['011110', '100001', '100000', '011110', '000001', '000001', '100001', '011110'],
+  O: ['011110', '100001', '100001', '100001', '100001', '100001', '100001', '011110'],
+  P: ['111110', '100001', '100001', '111110', '100000', '100000', '100000', '100000'],
   E: ['111111', '100000', '100000', '111100', '100000', '100000', '100000', '111111'],
-  Y: ['100001', '100001', '010010', '001100', '001100', '001100', '001100', '001100'],
-  A: ['011110', '100001', '100001', '111111', '100001', '100001', '100001', '100001'],
+  N: ['100001', '110001', '110001', '101001', '100101', '100011', '100011', '100001'],
+  T: ['111111', '001100', '001100', '001100', '001100', '001100', '001100', '001100'],
+  R: ['111110', '100001', '100001', '111110', '101000', '100100', '100010', '100001'],
+  D: ['111100', '100010', '100001', '100001', '100001', '100001', '100010', '111100'],
+  U: ['100001', '100001', '100001', '100001', '100001', '100001', '100001', '011110'],
+  C: ['011111', '100000', '100000', '100000', '100000', '100000', '100000', '011111'],
+  G: ['011110', '100001', '100000', '100000', '100111', '100001', '100001', '011110'],
+  W: ['100001', '100001', '101101', '101101', '101101', '110011', '110011', '100001'],
+  H: ['100001', '100001', '100001', '111111', '100001', '100001', '100001', '100001'],
 }
 
 const CELL = 10
@@ -51,26 +58,52 @@ function bitmapToPath(bitmap: string[]): string {
   return rects.join(' ')
 }
 
-const WORD = ['S', 'E', 'E', 'Y', 'A']
+// "&" has no clean straight-edge representation on this grid — rendered as
+// plain text between word groups rather than risking an unrecognizable
+// hand-plotted glyph.
+const WORD_GROUPS: string[][] = [
+  ['O', 'P', 'E', 'N'],
+  ['T', 'O'],
+  ['P', 'R', 'O', 'D', 'U', 'C', 'T'],
+  ['&'],
+  ['G', 'R', 'O', 'W', 'T', 'H'],
+]
+const LETTERS = WORD_GROUPS.flat().filter((token) => token !== '&')
+
+// Precomputed once at module scope (not during render) so each letter's
+// position in LETTERS/refs is a plain value, not a variable mutated while
+// mapping over JSX — oxlint flags render-time mutation as unreliable under
+// React's double-render passes.
+type Token = { char: string; letterIndex: number | null }
+const TOKEN_GROUPS: Token[][] = (() => {
+  let next = 0
+  return WORD_GROUPS.map((group) =>
+    group.map((char) => {
+      if (char === '&') return { char, letterIndex: null }
+      const letterIndex = next
+      next += 1
+      return { char, letterIndex }
+    }),
+  )
+})()
 
 export function FooterMorph() {
   const rootRef = useRef<HTMLDivElement>(null)
-  const svgRefs = useRef<(SVGSVGElement | null)[]>([])
-  const wordsRef = useRef<HTMLParagraphElement>(null)
+  const svgRefs = useRef<Record<string, SVGSVGElement | null>>({})
 
   useGSAP(
     () => {
-      const svgs = svgRefs.current
-      const words = wordsRef.current
-      if (svgs.some((svg) => !svg) || !words) return
       const prefersReducedMotion = window.matchMedia(
         '(prefers-reduced-motion: reduce)',
       ).matches
       if (prefersReducedMotion) return
 
+      const svgs = LETTERS.map((letter, i) => svgRefs.current[`${letter}-${i}`])
+      if (svgs.some((svg) => !svg)) return
+
       // Same idempotent convertToPath-from-the-live-DOM pattern as before,
-      // just once per shape instead of once total — see the note on why a
-      // ref captured at mount isn't safe under StrictMode/HMR double-runs.
+      // once per shape — see the note on why a ref captured at mount isn't
+      // safe under StrictMode/HMR double-runs.
       const shapes = svgs.map((svg) => {
         const current = svg!.querySelector('circle, path') as
           | SVGCircleElement
@@ -83,73 +116,75 @@ export function FooterMorph() {
       })
       if (shapes.some((shape) => !shape)) return
 
-      const split = new SplitText(words, { type: 'words' })
-      gsap.set(split.words, { opacity: 0, yPercent: 40 })
-
       const trigger = ScrollTrigger.create({
         trigger: rootRef.current,
-        start: 'top 65%',
+        start: 'top 70%',
         once: true,
         onEnter: () => {
-          // Words reveal once, same as before — only the shapes loop.
-          gsap.to(split.words, {
-            opacity: 1,
-            yPercent: 0,
-            duration: 0.6,
-            stagger: 0.1,
-            ease: 'expo.out',
-          })
-
-          // Each circle morphs into its own letter with a slight stagger
-          // (a small "wave" across the row rather than all five snapping at
-          // once), then the whole timeline yoyos back to circles and
-          // repeats forever — repeatDelay pauses briefly on each fully-
-          // settled state (all circles, all letters) so both read clearly
+          // Each circle morphs into its own letter with a slight stagger (a
+          // small "wave" across the row), then the whole timeline yoyos
+          // back to circles and repeats forever — repeatDelay pauses
+          // briefly on each fully-settled state so both read clearly
           // before the next transition starts.
-          const loop = gsap.timeline({ repeat: -1, yoyo: true, repeatDelay: 0.7 })
+          const loop = gsap.timeline({ repeat: -1, yoyo: true, repeatDelay: 0.9 })
           shapes.forEach((shape, i) => {
-            const letterPath = bitmapToPath(LETTER_BITMAPS[WORD[i]])
+            const letterPath = bitmapToPath(LETTER_BITMAPS[LETTERS[i]])
             loop.to(
               shape,
-              { morphSVG: { shape: letterPath }, duration: 0.5, ease: 'power2.inOut' },
-              i * 0.08,
+              { morphSVG: { shape: letterPath }, duration: 0.45, ease: 'power2.inOut' },
+              i * 0.035,
             )
           })
         },
       })
 
-      return () => {
-        trigger.kill()
-        split.revert()
-      }
+      return () => trigger.kill()
     },
     { scope: rootRef },
   )
 
   return (
-    <div ref={rootRef} className="mt-16 flex flex-col items-center gap-4">
-      <div className="flex gap-2">
-        {WORD.map((letter, i) => (
-          <svg
-            key={`${letter}-${i}`}
-            ref={(el) => {
-              svgRefs.current[i] = el
-            }}
-            width="44"
-            height="52"
-            viewBox="0 0 100 100"
-            aria-hidden="true"
-          >
-            <circle cx="50" cy="50" r="38" fill="var(--color-accent-primary)" opacity="0.85" />
-          </svg>
-        ))}
-      </div>
-      <p
-        ref={wordsRef}
-        className="font-mono text-sm uppercase tracking-widest text-[var(--color-muted)]"
-      >
-        See Ya.
-      </p>
+    <div ref={rootRef} className="flex flex-wrap items-center justify-center gap-x-4 gap-y-3">
+      {TOKEN_GROUPS.map((group, groupI) => (
+        <div key={groupI} className="flex items-center gap-1.5 sm:gap-2">
+          {group.map(({ char, letterIndex }) => {
+            if (letterIndex === null) {
+              return (
+                <span
+                  key="amp"
+                  aria-hidden="true"
+                  className="px-1 text-2xl text-[var(--color-muted)] sm:text-3xl"
+                >
+                  &amp;
+                </span>
+              )
+            }
+            const refKey = `${char}-${letterIndex}`
+            return (
+              <svg
+                key={refKey}
+                ref={(el) => {
+                  svgRefs.current[refKey] = el
+                }}
+                width="34"
+                height="40"
+                viewBox="0 0 100 100"
+                aria-hidden="true"
+                className="sm:h-12 sm:w-10"
+              >
+                <circle cx="50" cy="50" r="38" fill="var(--color-accent-primary)" opacity="0.85" />
+              </svg>
+            )
+          })}
+        </div>
+      ))}
+      {/* Kept as real accessible text (screen readers, page search,
+       * view-source) since the visual heading above is entirely circles/SVG,
+       * not text nodes. Sourced from the same content.ts field the WORD_GROUPS
+       * above are a hand-authored letter-for-letter match of — if that copy
+       * ever changes, WORD_GROUPS needs updating too, same coupling the
+       * previous "See Ya." version had. */}
+      <span className="sr-only">{fullTime.heading}</span>
     </div>
   )
 }

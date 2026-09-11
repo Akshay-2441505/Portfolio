@@ -38,11 +38,7 @@ export function Contact() {
     <section id="contact" className="relative px-6 py-24 md:px-10 md:py-32">
       <FooterWave />
       <div className="relative mx-auto max-w-3xl text-center">
-        <FadeIn>
-          <h2 className="text-4xl font-bold uppercase tracking-tight md:text-6xl">
-            {fullTime.heading}
-          </h2>
-        </FadeIn>
+        <FooterMorph />
 
         <FadeIn delay={0.1}>
           <p className="mx-auto mt-6 max-w-xl text-lg text-[var(--color-muted)]">
@@ -86,7 +82,6 @@ export function Contact() {
             </a>
           </div>
         </FadeIn>
-        <FooterMorph />
       </div>
 
       <p className="mt-24 text-center font-mono text-xs uppercase tracking-widest text-[var(--color-muted)]">
