@@ -1,17 +1,29 @@
 import { useRef } from 'react'
 import { useGSAP } from '@gsap/react'
-import { gsap } from '../lib/gsap'
+import { gsap, SplitText } from '../lib/gsap'
 
 /** Below this many px of overflow there's nothing worth pinning the page for
  * — the tween would animate ~0px while ScrollTrigger still ate a full
  * viewport of scroll. */
 const MIN_SCROLL_DISTANCE = 20
 
+// Each character starts scattered above the baseline at a random height and
+// tilt, then drops flat as it scrolls into the reading position — the
+// reference clip shows individual letters settling one at a time (a real
+// per-character animation), not the whole line sliding in as one rigid
+// block. Kept modest so scattered characters stay inside the wrapper's own
+// padding instead of clipping against overflow-hidden.
+const CHAR_Y_RANGE: [number, number] = [-55, -20]
+const CHAR_ROTATION_RANGE: [number, number] = [-18, 18]
+const CHAR_SETTLE_DURATION = 0.4
+const CHAR_STAGGER = 0.03
+
 /** Pinned horizontal-scroll line (EFFECTS_PLAN.md, ref: "ContainerAnimation
  * SplitText"). Its own home, not the site's wow moment — that's the Hero
  * football per RESET.md. Text tracks leftward as the visitor scrolls
  * vertically past this section, pinned for the scroll distance it needs to
- * fully pass. */
+ * fully pass, while each character individually settles from a scattered
+ * tilt into the flat reading line as it arrives. */
 export function HorizontalText({ text }: { text: string }) {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLHeadingElement>(null)
@@ -36,9 +48,20 @@ export function HorizontalText({ text }: { text: string }) {
       // of scroll with zero visible motion — so just leave it in static flow.
       if (distance() < MIN_SCROLL_DISTANCE) return
 
-      const tween = gsap.to(el, {
-        x: () => -distance(),
-        ease: 'none',
+      const split = new SplitText(el, { type: 'chars' })
+      gsap.set(split.chars, {
+        yPercent: () => gsap.utils.random(CHAR_Y_RANGE[0], CHAR_Y_RANGE[1]),
+        rotation: () => gsap.utils.random(CHAR_ROTATION_RANGE[0], CHAR_ROTATION_RANGE[1]),
+      })
+
+      // The line's own horizontal travel and the per-character settle need
+      // to finish together — matching the x-tween's duration to the
+      // stagger's own total span (rather than two unrelated fixed numbers)
+      // keeps them in sync regardless of how many characters the tagline
+      // happens to have.
+      const totalCharSpan = (split.chars.length - 1) * CHAR_STAGGER + CHAR_SETTLE_DURATION
+
+      const tl = gsap.timeline({
         scrollTrigger: {
           trigger: wrapper,
           // 'top top' pinned as soon as the wrapper's edge touched the very
@@ -59,17 +82,30 @@ export function HorizontalText({ text }: { text: string }) {
           invalidateOnRefresh: true,
         },
       })
+      tl.to(el, { x: () => -distance(), ease: 'none', duration: totalCharSpan }, 0)
+      tl.to(
+        split.chars,
+        {
+          yPercent: 0,
+          rotation: 0,
+          ease: 'none',
+          duration: CHAR_SETTLE_DURATION,
+          stagger: { each: CHAR_STAGGER, from: 'start' },
+        },
+        0,
+      )
 
       return () => {
-        tween.scrollTrigger?.kill()
-        tween.kill()
+        tl.scrollTrigger?.kill()
+        tl.kill()
+        split.revert()
       }
     },
     { scope: wrapperRef },
   )
 
   return (
-    <div ref={wrapperRef} className="overflow-hidden py-12">
+    <div ref={wrapperRef} className="overflow-hidden py-16">
       <h3
         ref={textRef}
         // A fixed Tailwind size (even text-8xl) is a fixed pixel value — it
