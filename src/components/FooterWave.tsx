@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useId, useRef } from 'react'
 import { useGSAP } from '@gsap/react'
 import { gsap, ScrollTrigger } from '../lib/gsap'
 
@@ -7,18 +7,22 @@ import { gsap, ScrollTrigger } from '../lib/gsap'
 // which Task 8 introduces for the text-morph beat) based on how fast the
 // visitor was scrolling when the footer entered view (EFFECTS_PLAN.md, ref:
 // "Footer Bounce Based on Scroll Speed").
-const FLAT_Y = 40
-// Previous attempt made the whole element permanently taller (110px) to
-// force a bigger bounce — that just reads as "there's a big thick bar
-// sitting here," visible even at rest, not "something bounced." Reverted
-// to a slim resting height and instead let the peak swing outside the
-// SVG's own box (overflow: visible below) only while animating, so the
-// bulge can be dramatic without the resting divider being thick.
-const BULGE_Y = -70
+//
+// The reference clip's own footer graphic is a full colored panel filling a
+// large share of the bottom viewport (viewBox ~2278x683, roughly a 3:1
+// width:height panel), not a thin decorative line — two earlier attempts at
+// "make it stronger" kept the panel a thin strip and just tuned its color/
+// amplitude, which could never read the same way regardless of tuning. This
+// version matches the reference's actual scale: a tall gradient panel, cyan
+// fading to transparent, with the curve as its lit top edge.
+const VIEWBOX_HEIGHT = 400
+const FLAT_Y = 120
+const BULGE_Y = 55
 
 export function FooterWave() {
   const pathRef = useRef<SVGPathElement>(null)
   const rootRef = useRef<SVGSVGElement>(null)
+  const gradientId = useId()
 
   useGSAP(
     () => {
@@ -34,7 +38,7 @@ export function FooterWave() {
       function render() {
         path!.setAttribute(
           'd',
-          `M0,${FLAT_Y} C 300,${state.y} 900,${state.y} 1200,${FLAT_Y} L1200,120 L0,120 Z`,
+          `M0,${FLAT_Y} C 300,${state.y} 900,${state.y} 1200,${FLAT_Y} L1200,${VIEWBOX_HEIGHT} L0,${VIEWBOX_HEIGHT} Z`,
         )
       }
       render()
@@ -45,10 +49,8 @@ export function FooterWave() {
         onEnter: (self) => {
           const velocity = Math.abs(self.getVelocity())
           const intensity = Math.min(1, velocity / 1200)
-          // Elastic on the way up too, not just the return — a linear/power
-          // rise into an elastic settle reads as "snap then wobble," two
-          // different physics in one motion. Elastic both ways is one
-          // continuous spring, which is what an actual bounce looks like.
+          // Elastic both ways — one continuous spring, not a snap up
+          // followed by a different wobble down.
           gsap
             .timeline()
             .to(state, {
@@ -75,27 +77,27 @@ export function FooterWave() {
     <svg
       ref={rootRef}
       aria-hidden="true"
-      className="pointer-events-none absolute -top-[1px] left-0 w-full overflow-visible"
-      height="40"
-      viewBox="0 0 1200 120"
+      className="pointer-events-none absolute -top-[1px] left-0 z-0 w-full"
+      height="220"
+      viewBox={`0 0 1200 ${VIEWBOX_HEIGHT}`}
       preserveAspectRatio="none"
     >
-      {/* --color-surface (#111) against the body's near-black vignette was
-       * ~1.05:1 — invisible. A 22% accent mix only got to ~1.8:1, still too
-       * close to the background to register. This goes most of the way to
-       * the full accent color, with a matching glow, so the edge actually
-       * reads as "lit" rather than a faint shimmer.
-       *
-       * overflow-visible + a slim 40px resting height (not the box itself)
-       * is what lets BULGE_Y swing well past the box during the animation
-       * without clipping into a flat rectangle, while the divider still
-       * reads as thin at rest. */}
+      {/* Gradient fill, not a flat color — the reference's panel is lit
+       * brightest right at the curve and fades out beneath it, reading as a
+       * glow spilling down rather than a solid block that would fight with
+       * the section's own text sitting on top of it. */}
+      <defs>
+        <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor="var(--color-accent-primary)" stopOpacity="0.5" />
+          <stop offset="100%" stopColor="var(--color-accent-primary)" stopOpacity="0" />
+        </linearGradient>
+      </defs>
       <path
         ref={pathRef}
-        fill="color-mix(in srgb, var(--color-accent-primary) 85%, var(--color-surface))"
+        fill={`url(#${gradientId})`}
         style={{
           filter:
-            'drop-shadow(0 0 18px color-mix(in srgb, var(--color-accent-primary) 60%, transparent))',
+            'drop-shadow(0 0 24px color-mix(in srgb, var(--color-accent-primary) 55%, transparent))',
         }}
       />
     </svg>

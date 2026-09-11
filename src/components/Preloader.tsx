@@ -84,8 +84,28 @@ export function Preloader({ onComplete }: { onComplete: () => void }) {
           stagger: 0.1,
           ease: 'back.out(1.7)',
         }, 0)
+        // The reference demo's own "click a box to stagger out" exit spins
+        // and fades each box individually, not the whole row at once — the
+        // previous version only ever slid the root container up as one
+        // rigid block for its exit, meaning the stagger concept only ever
+        // showed up on the way in. Mirroring the same per-letter treatment
+        // on the way out (reversed stagger, so the last letter to arrive is
+        // the first to leave) makes the whole boot sequence read as one
+        // consistent staggered language, not "staggered in, plain out."
+        tl.to(
+          split.chars,
+          {
+            yPercent: -100,
+            opacity: 0,
+            rotation: 25,
+            duration: 0.5,
+            stagger: { each: 0.04, from: 'end' },
+            ease: 'power2.in',
+          },
+          '+=0.5',
+        )
       }
-      tl.to(rootRef.current, { yPercent: -100, duration: 0.8, ease: 'expo.inOut' }, '+=0.5')
+      tl.to(rootRef.current, { yPercent: -100, duration: 0.8, ease: 'expo.inOut' }, split ? '-=0.2' : '+=0.5')
     }
     runExitRef.current = runExit
 
