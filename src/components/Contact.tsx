@@ -47,21 +47,18 @@ export function Contact() {
         </FadeIn>
 
         <FadeIn delay={0.2}>
-          <Magnetic className="mt-10 inline-block" strength={12}>
-            <a
-              ref={mailRef}
-              href={`mailto:${profile.email}`}
-              onClick={handleMailClick}
-              className="flex items-center gap-2 rounded-full bg-[var(--color-fg)] px-8 py-4 font-mono text-sm uppercase tracking-widest text-[var(--color-bg)] transition-opacity hover:opacity-80"
-            >
-              <Mail size={16} />
-              {profile.email}
-            </a>
-          </Magnetic>
-        </FadeIn>
-
-        <FadeIn delay={0.25}>
-          <div className="mt-8 flex items-center justify-center gap-6">
+          <div className="mt-10 flex items-center justify-center gap-6">
+            <Magnetic strength={12}>
+              <a
+                ref={mailRef}
+                href={`mailto:${profile.email}`}
+                onClick={handleMailClick}
+                aria-label="Email"
+                className="text-[var(--color-muted)] transition-colors hover:text-[var(--color-fg)]"
+              >
+                <Mail size={20} />
+              </a>
+            </Magnetic>
             <a
               href={profile.github}
               target="_blank"
@@ -83,10 +80,6 @@ export function Contact() {
           </div>
         </FadeIn>
       </div>
-
-      <p className="mt-24 text-center font-mono text-xs uppercase tracking-widest text-[var(--color-muted)]">
-        © {new Date().getFullYear()} {profile.name} — Built with React, GSAP &amp; Canvas
-      </p>
     </section>
   )
 }

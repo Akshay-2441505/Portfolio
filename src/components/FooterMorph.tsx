@@ -153,7 +153,7 @@ export function FooterMorph() {
                 <span
                   key="amp"
                   aria-hidden="true"
-                  className="px-1 text-2xl text-[var(--color-muted)] sm:text-3xl"
+                  className="px-1 text-2xl text-[var(--color-fg)] opacity-70 sm:text-3xl"
                 >
                   &amp;
                 </span>
@@ -172,7 +172,7 @@ export function FooterMorph() {
                 aria-hidden="true"
                 className="sm:h-12 sm:w-10"
               >
-                <circle cx="50" cy="50" r="38" fill="var(--color-accent-primary)" opacity="0.85" />
+                <circle cx="50" cy="50" r="38" fill="var(--color-fg)" opacity="0.9" />
               </svg>
             )
           })}

@@ -71,7 +71,7 @@ export const skills = [
   },
   {
     number: '04',
-    name: 'Mindset',
+    name: 'Working Style',
     detail: 'Ownership & Initiative, Cross-functional Collaboration, Problem Solving',
   },
 ]
