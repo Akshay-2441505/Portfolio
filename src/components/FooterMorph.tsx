@@ -13,8 +13,13 @@ import { gsap, MorphSVGPlugin, ScrollTrigger, SplitText } from '../lib/gsap'
 // union paths below, morphed through in sequence — S, E, Y, A — mirroring
 // the reference's one-shape-becomes-one-letter pattern, just done as a
 // sequence on a single shape instead of in parallel across three.
-const BLOB_PATH =
-  'M50,10 C75,10 90,35 85,55 C80,80 55,90 40,80 C20,68 10,45 20,25 C27,12 38,10 50,10 Z'
+//
+// Deliberately ends ON "A", not settled back to a round blob — a previous
+// version morphed back to a soft blob at the end, which is round enough
+// that the resting state looked almost identical to the starting circle.
+// Anyone who only sees the before/after (missed the animation playing,
+// which is likely for a one-shot effect near the very bottom of the page)
+// saw what looked like nothing had happened at all.
 
 // 6x8 bitmaps, one row per string, '1' = filled cell. Simple enough to
 // author and verify by eye, and a handful of rectangles per letter keeps
@@ -95,7 +100,12 @@ export function FooterMorph() {
 
       const trigger = ScrollTrigger.create({
         trigger: rootRef.current,
-        start: 'top 85%',
+        // 'top 85%' fired as soon as this block barely peeked in from the
+        // bottom edge — by the time a visitor's eye actually reached it,
+        // the ~4s sequence had often already finished and settled, so all
+        // they ever saw was the resting state. 'top 65%' waits until it's
+        // meaningfully in view before starting.
+        start: 'top 65%',
         once: true,
         onEnter: () => {
           // A scale pulse on the whole SVG, synced with the first morph step
@@ -103,23 +113,24 @@ export function FooterMorph() {
           // register even when it's working correctly.
           const tl = gsap
             .timeline()
-            .to(svg, { scale: 1.25, duration: 0.5, ease: 'power2.out' }, 0)
-            .to(svg, { scale: 1, duration: 0.6, ease: 'elastic.out(1, 0.5)' }, 0.5)
+            .to(svg, { scale: 1.2, duration: 0.35, ease: 'power2.out' }, 0)
+            .to(svg, { scale: 1, duration: 0.45, ease: 'elastic.out(1, 0.5)' }, 0.35)
 
           // Circle -> S -> E -> Y -> A, holding briefly on each letter so it
-          // actually reads before the next morph starts.
+          // actually reads before the next morph starts. Tightened from the
+          // first pass (was 0.5s morph + 0.25s hold each, ~4s total before
+          // even starting the word reveal) — shorter total runtime means a
+          // shorter window during which a visitor could look away and miss
+          // the whole thing.
           LETTER_SEQUENCE.forEach((letterPath) => {
-            tl.to(shape, { morphSVG: { shape: letterPath }, duration: 0.5, ease: 'power2.inOut' })
-            tl.to({}, { duration: 0.25 }) // hold
+            tl.to(shape, { morphSVG: { shape: letterPath }, duration: 0.35, ease: 'power2.inOut' })
+            tl.to({}, { duration: 0.15 }) // hold
           })
-          // Settles back to a soft blob rather than ending on a hard-edged
-          // letter — a gentler resting note for a farewell beat.
-          tl.to(shape, { morphSVG: { shape: BLOB_PATH }, duration: 0.6, ease: 'power2.inOut' })
 
           tl.to(
             split.words,
             { opacity: 1, yPercent: 0, duration: 0.6, stagger: 0.1, ease: 'expo.out' },
-            '-=1.5',
+            '-=0.8',
           )
         },
       })
