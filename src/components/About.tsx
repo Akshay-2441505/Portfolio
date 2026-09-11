@@ -2,7 +2,7 @@ import { FadeIn } from './FadeIn'
 import { HorizontalText } from './HorizontalText'
 import { ImageReveal } from './ImageReveal'
 import { Stats } from './Stats'
-import { about, education, profile } from '../data/content'
+import { about, certifications, education, profile } from '../data/content'
 
 export function About() {
   return (
@@ -35,6 +35,19 @@ export function About() {
               <p className="mt-2 font-medium">{item.degree}</p>
               <p className="text-sm text-[var(--color-muted)]">{item.school}</p>
               <p className="mt-1 text-sm text-[var(--color-muted)]">{item.detail}</p>
+            </FadeIn>
+          ))}
+        </div>
+
+        <div className="mt-10 flex flex-col gap-3 border-t border-[var(--color-border)] pt-6">
+          {certifications.map((cert, i) => (
+            <FadeIn key={cert.name} delay={0.1 * i}>
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <p className="text-sm text-[var(--color-fg)]">{cert.name}</p>
+                <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-muted)]">
+                  {cert.org} · {cert.period}
+                </p>
+              </div>
             </FadeIn>
           ))}
         </div>

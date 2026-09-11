@@ -1,8 +1,8 @@
 export const profile = {
   name: 'Akshay Kurdekar',
   initials: 'AK',
-  role: 'BCA Student — Interactive & Web Development',
-  tagline: 'I build things that move on scroll.',
+  role: 'BCA Student — Product & Business',
+  tagline: 'Curious about how good products get built and sold.',
   location: 'Bengaluru, India',
   email: 'akshay.kurdekar@bcah.christuniversity.in',
   linkedin: 'https://linkedin.com/in/akshay-a-kurdekar-ab95202a8',
@@ -12,7 +12,7 @@ export const profile = {
 
 export const about = {
   paragraph:
-    "BCA student at CHRIST (Deemed to be University), Bengaluru, building web apps, 3D interfaces, and generative art. I like taking a scroll effect or a rendering trick apart until I understand it, then building something of my own with it. Alongside that I'm co-founding Dekho, an early-stage fintech idea, which keeps me equally curious about the people using what I build, not just the code behind it.",
+    "BCA student at CHRIST (Deemed to be University), Bengaluru, currently exploring product and customer discovery through Dekho, an early-stage fintech idea. I've run JTBD interviews, dug into India's PFM and regulatory landscape (RBI Account Aggregator framework, DPDP), and used that to shape a staged pilot rollout — work that's made me more interested in the customer-facing, evidence-driven side of building things than in the code itself. I can hold my own technically when I need to, but I'm actively looking at product, growth, and other non-technical roles where that curiosity is the main asset.",
 }
 
 export const education = [
@@ -55,39 +55,34 @@ export const experience = [
 export const skills = [
   {
     number: '01',
-    name: 'Frontend & Interactive Web',
-    detail: 'HTML, CSS, JavaScript, TypeScript, React, Next.js, Framer Motion',
+    name: 'Product & Discovery',
+    detail:
+      'Go-to-Market Strategy, JTBD Customer Discovery, Market & Competitor Research, Fintech Regulatory Awareness (RBI Account Aggregator framework, DPDP)',
   },
   {
     number: '02',
-    name: '3D & Creative Coding',
-    detail: 'Three.js / WebGL experiments, canvas-based generative art, scroll-driven animation',
+    name: 'Core Languages',
+    detail: 'C, C++, Python, Java, HTML, CSS, JavaScript',
   },
   {
     number: '03',
-    name: 'Core Languages',
-    detail: 'C, C++, Python, Java, Kotlin, PL/SQL',
+    name: 'Data & Tools',
+    detail: 'MySQL',
   },
   {
     number: '04',
-    name: 'Data & Backend',
-    detail: 'MySQL, MongoDB, Supabase',
-  },
-  {
-    number: '05',
-    name: 'Product & Discovery',
-    detail: 'Go-to-market thinking, JTBD customer discovery, competitor research',
+    name: 'Mindset',
+    detail: 'Ownership & Initiative, Cross-functional Collaboration, Problem Solving',
   },
 ]
 
 export const marqueeItems = [
-  'React',
-  'FastAPI',
-  'TypeScript',
-  'GSAP',
-  'Python',
-  'PostgreSQL',
-  'Claude Agent SDK',
+  'JTBD',
+  'Go-to-Market',
+  'Customer Discovery',
+  'Fintech Regulation',
+  'Product Strategy',
+  'Market Research',
 ]
 
 export type Project = {
@@ -99,7 +94,7 @@ export type Project = {
   github?: string
   live?: string
   /** Status pill on the Highlights card (TECH_SPEC.md §4) — omitted for
-   * the 3D site, which is a prototype rather than a live/in-build product. */
+   * projects with no live/in-build state to show. */
   status?: 'live' | 'in-build'
   /** Renders a live visual inside the card instead of a static panel —
    * each one is a small recreation/visualization tied to what that
@@ -114,7 +109,7 @@ export const projects: Project[] = [
     status: 'live',
     name: 'Dekho',
     description:
-      'An AI-native personal finance app, built from real customer discovery instead of a feature list. Ran JTBD interviews to find the actual pain point behind expense-tracking behavior, then designed a staged 10→50→100 pilot rollout — currently running with 10–15 active users. Led the Wealth section redesign, migrated the chatbot API routes, and built Monthly Wrap and app-lock security.',
+      'An AI-native personal finance app, built from real customer discovery instead of a feature list. Ran JTBD interviews to find the actual pain point behind expense-tracking behavior, designed a weighted 7-question screening framework, and used it to run a staged 10→50→100 pilot rollout — currently at 10–15 active users. Also led the Wealth section redesign and shipped Monthly Wrap and app-lock security.',
     tech: ['React', 'Vite', 'FastAPI', 'RAG chatbot'],
   },
   {
@@ -123,18 +118,17 @@ export const projects: Project[] = [
     status: 'in-build',
     name: 'Frontage',
     description:
-      'Currently building for the Razorpay AI Buildathon: an agent that audits a merchant\'s "AI-readability," auto-generates an agent-readable product catalog, then lets an AI buyer agent complete a real, bounded test-mode transaction end-to-end. Built around a "Diagnose → Fix → Transact" flow.',
+      'Building for the Razorpay AI Buildathon: merchants have no way to know if their catalog is even readable by AI shopping agents. Frontage audits a merchant\'s "AI-readability," auto-generates an agent-readable product catalog, then lets an AI buyer agent complete a real, bounded test-mode transaction end-to-end — a "Diagnose → Fix → Transact" flow.',
     tech: ['FastAPI', 'React', 'Vite', 'Razorpay API'],
   },
   {
     index: '03',
-    category: 'Interactive / 3D',
-    name: '3D Interactive Website',
+    category: 'Product / Systems',
+    name: 'Digital MSME Loan Simulation',
     description:
-      'A Philips-inspired prototype exploring 3D interaction and immersive UX — scroll-triggered animation, cinematic transitions, and user-driven navigation.',
-    tech: ['Next.js', 'TypeScript', 'CSS'],
-    github: 'https://github.com/Akshay-2441505/Philips_Immersive_Website',
-    visual: 'wireframe',
+      'An end-to-end loan workflow simulation with borrower and approver roles — designing who approves what, and why, across application, validation, and approval/rejection logic.',
+    tech: ['Python', 'PL/SQL', 'MySQL', 'Supabase'],
+    github: 'https://github.com/Akshay-2441505/PSD_Final_Project',
   },
 ]
 
@@ -148,31 +142,31 @@ export type MoreWorkItem = {
 
 export const moreWork: MoreWorkItem[] = [
   {
+    name: '3D Interactive Website',
+    description:
+      'A Philips-inspired prototype exploring 3D interaction and immersive UX — scroll-triggered animation, cinematic transitions, and user-driven navigation.',
+    tech: ['Next.js', 'TypeScript', 'CSS'],
+    github: 'https://github.com/Akshay-2441505/Philips_Immersive_Website',
+  },
+  {
     name: 'Generative Art System',
     description:
       'A WeaveSilk-inspired canvas piece that renders glowing light trails on a moving starfield in real time, driven by symmetry and user input.',
     tech: ['JavaScript', 'Canvas', 'CSS'],
     github: 'https://github.com/Akshay-2441505/generative-art',
   },
-  {
-    name: 'Digital MSME Loan Simulation',
-    description:
-      'An end-to-end loan workflow simulation with borrower and approver roles — application, validation, and approval/rejection logic, backed by Supabase.',
-    tech: ['Python', 'PL/SQL', 'MySQL', 'Supabase'],
-    github: 'https://github.com/Akshay-2441505/PSD_Final_Project',
-  },
 ]
 
 export const heroCopy = {
   headline: 'Akshay Kurdekar',
-  subLine: 'Building AI-native products from the problem up.',
-  positionTag: 'Product & Build',
-  metaLine: 'Co-founding Dekho · BCA, Christ University',
+  subLine: 'Learning how products get built, tested, and sold.',
+  positionTag: 'Product & Business',
+  metaLine: 'BCA Student · Building Dekho',
 }
 
 export const fullTime = {
-  heading: 'Full-time.',
-  body: 'Always open to talking product, growth, or a good technical problem.',
+  heading: 'Open to product & growth.',
+  body: 'Always up for a conversation about product, growth, or startups.',
 }
 
 export const stats = [
