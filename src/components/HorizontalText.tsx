@@ -72,7 +72,15 @@ export function HorizontalText({ text }: { text: string }) {
     <div ref={wrapperRef} className="overflow-hidden py-12">
       <h3
         ref={textRef}
-        className="w-max whitespace-nowrap pl-6 text-5xl font-medium tracking-tight md:pl-10 md:text-7xl lg:pl-24 lg:text-8xl xl:pl-32"
+        // A fixed Tailwind size (even text-8xl) is a fixed pixel value — it
+        // stops overflowing once the viewport grows past it, which is
+        // exactly what happened at 1920px (a very common desktop width):
+        // distance() hit 0 and the whole effect silently disabled. Sizing
+        // by viewport width instead (same technique Hero.tsx already uses
+        // for its own headline) keeps the text wider than the viewport by
+        // roughly the same proportion at any screen size, so there's always
+        // real distance to scroll through.
+        className="w-max whitespace-nowrap pl-6 text-[clamp(2.75rem,8vw,11rem)] font-medium tracking-tight md:pl-10"
       >
         {text}
       </h3>
