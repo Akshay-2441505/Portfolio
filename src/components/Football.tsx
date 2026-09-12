@@ -8,12 +8,11 @@ import { BufferAttribute, IcosahedronGeometry } from 'three'
  * icosahedron (no GLB/texture pipeline needed — consistent with STATUS4's
  * finding that no 3D-asset generation tool is available in this
  * environment) with per-face vertex colors alternating between the site's
- * own off-white and a dark tone derived from --color-accent-primary, so the
- * panel pattern is literally built from the site's 2-color palette instead
- * of an invented black/white. */
+ * beige and ink tones, so the panel pattern is literally built from the
+ * site's own palette instead of an invented black/white. */
 
-const PANEL_LIGHT: [number, number, number] = [0.949, 0.941, 0.922] // #f2f0eb — matches --color-fg
-const PANEL_DARK: [number, number, number] = [0.02, 0.1, 0.11] // dark cyan-black, echoes --color-accent-primary
+const PANEL_LIGHT: [number, number, number] = [0.937, 0.906, 0.847] // #efe7d8 — matches --color-bg
+const PANEL_DARK: [number, number, number] = [0.114, 0.102, 0.09] // #1d1a17 — matches --color-fg
 
 function buildPanelColors(geometry: IcosahedronGeometry) {
   const position = geometry.attributes.position
@@ -71,9 +70,9 @@ export function Football({
   return (
     <group ref={groupRef}>
       <mesh geometry={geometry}>
-        {/* No emissive: a cyan self-glow pulled both panel colors toward the
-         * same teal, flattening the two-tone contrast the pattern exists for.
-         * The scene's cyan pointLight still tints the ball, but as light on a
+        {/* No emissive: a self-glow would pull both panel colors toward the
+         * same tone, flattening the two-tone contrast the pattern exists for.
+         * The scene's pointLight still tints the ball, but as light on a
          * surface — the light/dark panels stay distinguishable. */}
         <meshStandardMaterial
           vertexColors

@@ -34,7 +34,7 @@ export function Nav() {
             <span
               className={`flex h-4 w-4 items-center justify-center rounded-full border text-[9px] ${
                 active === link.id
-                  ? 'border-[var(--color-accent-primary)] text-[var(--color-accent-primary)] shadow-[var(--glow-primary)]'
+                  ? 'border-[var(--color-fg)] bg-[var(--color-fg)] text-[var(--color-bg)]'
                   : 'border-current'
               }`}
             >
@@ -77,7 +77,7 @@ export function Nav() {
                 <span
                   className={`flex h-5 w-5 items-center justify-center rounded-full border font-mono text-[10px] ${
                     active === link.id
-                      ? 'border-[var(--color-accent-primary)] text-[var(--color-accent-primary)]'
+                      ? 'border-[var(--color-fg)] bg-[var(--color-fg)] text-[var(--color-bg)]'
                       : 'border-current'
                   }`}
                 >

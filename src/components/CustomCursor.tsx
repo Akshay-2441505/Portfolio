@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { scrollVelocity } from '../lib/scrollVelocity'
 
-/** Small cyan dot + lagging ring following the cursor (VISUAL_CRAFT.md,
+/** Small ink dot + lagging ring following the cursor (VISUAL_CRAFT.md,
  * "build it all, trim later" list). Pure ref/transform-driven, no React
  * state, matching the site's established no-re-render-on-frequent-events
  * pattern (useScrollScrub, the Marquee rAF loop). Off entirely on touch
@@ -63,12 +63,12 @@ export function CustomCursor() {
       <div
         ref={dotRef}
         aria-hidden="true"
-        className="pointer-events-none fixed top-0 left-0 z-100 h-1.5 w-1.5 rounded-full bg-[var(--color-accent-primary)]"
+        className="pointer-events-none fixed top-0 left-0 z-100 h-1.5 w-1.5 rounded-full bg-[var(--color-fg)]"
       />
       <div
         ref={ringRef}
         aria-hidden="true"
-        className="pointer-events-none fixed top-0 left-0 z-100 h-8 w-8 rounded-full border border-[var(--color-accent-primary)]"
+        className="pointer-events-none fixed top-0 left-0 z-100 h-8 w-8 rounded-full border border-[var(--color-fg)]"
       />
     </>
   )

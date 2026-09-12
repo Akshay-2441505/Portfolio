@@ -1,61 +1,50 @@
 @import 'tailwindcss';
 
 @theme {
-  --font-sans: 'Space Grotesk', system-ui, sans-serif;
+  --font-serif: 'Newsreader', ui-serif, Georgia, serif;
+  --font-sans: 'Archivo', system-ui, sans-serif;
   --font-mono: 'Space Mono', ui-monospace, monospace;
 
-  --color-bg: #0a0a0a;
-  --color-surface: #111111;
-  --color-fg: #f2f0eb;
-  --color-muted: #8a8a86;
-  --color-border: rgba(242, 240, 235, 0.12);
-  /* The site's one accent — a real color sampled from the FIFA card art
-   * back when that asset was live UI; kept as the single accent post-reset
-   * (RESET.md: 2-3 colors max, near-monochrome) since it's already wired
-   * through nav/links/selection/scrollbar rather than being resampled from
-   * scratch for no reason. */
-  --color-accent-primary: #04f6fc;
-  /* Glow — soft falloff for accent-primary chrome, replacing flat-color
-   * borders/fills wherever they're meant to read as emitting light rather
-   * than painted on. */
-  --glow-primary: 0 0 24px color-mix(in srgb, var(--color-accent-primary) 55%, transparent);
+  /* Tonal beige, no accent hue — replaces the black+neon-cyan palette.
+   * Section variation comes from shifting between --color-bg and
+   * --color-deep (see --section-tint below), not from a separate color. */
+  --color-bg: #efe7d8;
+  --color-deep: #d6cdbe;
+  --color-surface: #e6decd;
+  --color-fg: #1d1a17;
+  --color-muted: #7d7360;
+  --color-border: rgba(29, 26, 23, 0.12);
 }
 
 html {
   background: var(--color-bg);
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
   margin: 0;
-  /* Vignette instead of flat fill — near-black center easing to pure black
-   * at the edges, so the page has depth instead of a single flat swatch. */
-  background: radial-gradient(ellipse at center, var(--color-bg) 0%, #000000 100%);
+  background: var(--color-bg);
   color: var(--color-fg);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Per-section temperature drift — defaults to fully transparent (shows the
- * body vignette through untouched); Hero and Highlights override this to a
- * low-alpha tint so they read a touch cooler/warmer, for a sense of journey
- * without a new named color or occluding the vignette elsewhere. */
+/* Per-section tone shift — defaults to the base tone; Highlights/Projects
+ * switch to the deeper tone so sections read as a journey through shades of
+ * the same beige, the only "color" move this palette makes. */
 :root {
-  --section-tint: transparent;
+  --section-tint: var(--color-bg);
 }
 section {
   background: var(--section-tint);
-}
-#top {
-  --section-tint: rgba(30, 70, 110, 0.1);
 }
 /* #projects is a plain div (the sticky-card stack), not a <section> — needs
  * its own explicit background since the generic `section` rule above only
  * matches actual section elements like #highlights. */
 #highlights,
 #projects {
-  --section-tint: rgba(110, 70, 30, 0.1);
+  --section-tint: var(--color-deep);
   background: var(--section-tint);
 }
 
@@ -64,7 +53,7 @@ section {
 }
 
 ::selection {
-  background: var(--color-accent-primary);
+  background: var(--color-fg);
   color: var(--color-bg);
 }
 
@@ -80,7 +69,7 @@ section {
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-accent-primary);
+  background: var(--color-fg);
 }
 html {
   scrollbar-color: var(--color-border) var(--color-bg);
@@ -101,7 +90,7 @@ html {
   transition: opacity 0.3s ease;
   background: radial-gradient(
     500px circle at var(--mx, 50%) var(--my, 50%),
-    color-mix(in srgb, var(--color-accent-primary) 15%, transparent),
+    color-mix(in srgb, var(--color-fg) 8%, transparent),
     transparent 70%
   );
 }
@@ -113,7 +102,7 @@ html {
   background: linear-gradient(
     120deg,
     var(--color-surface) 0%,
-    color-mix(in srgb, var(--color-accent-primary) 18%, var(--color-surface)) 50%,
+    color-mix(in srgb, var(--color-fg) 6%, var(--color-surface)) 50%,
     var(--color-surface) 100%
   );
   background-size: 220% 220%;
@@ -141,10 +130,6 @@ html {
   pointer-events: none;
   opacity: 0.05;
   mix-blend-mode: overlay;
-  /* Tinted cyan rather than neutral gray, so the texture reinforces the
-   * palette instead of sitting unrelated to it — cheaper than regenerating
-   * the noise SVG's own color channel. */
-  filter: hue-rotate(160deg) saturate(2.2);
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   animation: grain-shift 8s steps(8) infinite;
 }

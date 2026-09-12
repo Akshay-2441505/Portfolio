@@ -13,8 +13,8 @@ import { gsap, ScrollTrigger } from '../lib/gsap'
 // width:height panel), not a thin decorative line — two earlier attempts at
 // "make it stronger" kept the panel a thin strip and just tuned its color/
 // amplitude, which could never read the same way regardless of tuning. This
-// version matches the reference's actual scale: a tall gradient panel, cyan
-// fading to transparent, with the curve as its lit top edge.
+// version matches the reference's actual scale: a tall gradient panel in the
+// palette's deep beige tone, with the curve as its top edge.
 const VIEWBOX_HEIGHT = 400
 const FLAT_Y = 120
 const BULGE_Y = 55
@@ -88,18 +88,11 @@ export function FooterWave() {
        * the section's own text sitting on top of it. */}
       <defs>
         <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="var(--color-accent-primary)" stopOpacity="0.5" />
-          <stop offset="100%" stopColor="var(--color-accent-primary)" stopOpacity="0" />
+          <stop offset="0%" stopColor="var(--color-deep)" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="var(--color-deep)" stopOpacity="0.4" />
         </linearGradient>
       </defs>
-      <path
-        ref={pathRef}
-        fill={`url(#${gradientId})`}
-        style={{
-          filter:
-            'drop-shadow(0 0 24px color-mix(in srgb, var(--color-accent-primary) 55%, transparent))',
-        }}
-      />
+      <path ref={pathRef} fill={`url(#${gradientId})`} />
     </svg>
   )
 }

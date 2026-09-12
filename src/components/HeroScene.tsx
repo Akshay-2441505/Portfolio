@@ -96,8 +96,8 @@ export function HeroScene() {
       >
         <PerformanceMonitor onDecline={() => setLowQuality(true)} />
         <ambientLight intensity={0.5} />
-        <pointLight position={[2, 2, 3]} intensity={1.4} color="#04f6fc" />
-        <pointLight position={[-2, -1, -2]} intensity={0.5} color="#f2f0eb" />
+        <pointLight position={[2, 2, 3]} intensity={1.4} color="#d6cdbe" />
+        <pointLight position={[-2, -1, -2]} intensity={0.5} color="#efe7d8" />
         <HeroSceneContent progress={progress} />
         {!lowQuality && (
           <EffectComposer>

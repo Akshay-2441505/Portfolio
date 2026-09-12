@@ -164,7 +164,7 @@ export function Projects() {
     <>
       <section id="highlights" className="px-6 pt-24 pb-12 md:px-10 md:pt-32">
         <FadeIn>
-          <h2 className="text-4xl font-bold uppercase tracking-tight md:text-6xl">Highlights</h2>
+          <h2 className="font-serif text-4xl font-medium tracking-tight md:text-6xl">Highlights</h2>
         </FadeIn>
         <FadeIn delay={0.1}>
           <p className="mt-3 font-mono text-xs uppercase tracking-widest text-[var(--color-muted)]">
@@ -188,7 +188,7 @@ function MoreWork() {
   return (
     <div className="px-6 py-16 md:px-10 md:py-24">
       <FadeIn>
-        <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-accent-primary)]">
+        <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-fg)]">
           More work
         </p>
       </FadeIn>
@@ -199,7 +199,7 @@ function MoreWork() {
             <FadeIn key={item.name} delay={i * 0.08}>
               <div className="flex flex-col gap-3 py-6 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h3 className="font-bold tracking-tight uppercase">{item.name}</h3>
+                  <h3 className="font-serif text-lg font-medium tracking-tight">{item.name}</h3>
                   <WordReveal className="mt-1 max-w-xl text-sm text-[var(--color-muted)]">
                     {item.description}
                   </WordReveal>

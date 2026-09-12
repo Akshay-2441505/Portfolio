@@ -26,7 +26,7 @@ const LINK_DISTANCE = 90
 
 export const proceduralFrameSource: FrameSource = {
   draw(ctx, progress, width, height, t) {
-    ctx.fillStyle = 'rgba(10, 10, 10, 0.14)'
+    ctx.fillStyle = 'rgba(239, 231, 216, 0.14)' // mirrors --color-bg
     ctx.fillRect(0, 0, width, height)
 
     const angle = t * 0.15 + progress * Math.PI * 1.5
@@ -47,7 +47,7 @@ export const proceduralFrameSource: FrameSource = {
     })
 
     const linkAlpha = 0.05 + progress * 0.35
-    ctx.strokeStyle = `rgba(4, 246, 252, ${linkAlpha})`
+    ctx.strokeStyle = `rgba(29, 26, 23, ${linkAlpha})` // mirrors --color-fg
     ctx.lineWidth = 1
     for (let i = 0; i < projected.length; i++) {
       for (let j = i + 1; j < projected.length; j++) {
@@ -62,7 +62,7 @@ export const proceduralFrameSource: FrameSource = {
       }
     }
 
-    ctx.fillStyle = '#04f6fc' // mirrors --color-accent-primary
+    ctx.fillStyle = '#1d1a17' // mirrors --color-fg
     for (const p of projected) {
       const radius = Math.max(1.5, p.scale * 0.03)
       ctx.beginPath()

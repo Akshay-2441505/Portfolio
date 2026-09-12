@@ -25,7 +25,7 @@ function StatusPill({ status }: { status: Project['status'] }) {
     <span
       className={`rounded-full border px-3 py-1 font-mono text-[10px] uppercase tracking-widest ${
         isLive
-          ? 'border-[var(--color-accent-primary)] text-[var(--color-accent-primary)]'
+          ? 'border-[var(--color-fg)] bg-[var(--color-fg)] text-[var(--color-bg)]'
           : 'border-[var(--color-muted)] text-[var(--color-muted)]'
       }`}
     >
@@ -56,12 +56,12 @@ export function ProjectCard({
           </span>
           <div>
             <div className="flex flex-wrap items-center gap-2">
-              <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-accent-primary)]">
+              <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-fg)]">
                 {project.category}
               </p>
               <StatusPill status={project.status} />
             </div>
-            <h3 className="mt-1 text-xl font-bold uppercase tracking-tight md:text-2xl">
+            <h3 className="font-serif mt-1 text-xl font-medium tracking-tight md:text-2xl">
               {project.name}
             </h3>
           </div>

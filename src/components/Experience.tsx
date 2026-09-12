@@ -7,7 +7,7 @@ export function Experience() {
   return (
     <section className="px-6 py-24 md:px-10 md:py-32">
       <FadeIn>
-        <h2 className="text-4xl font-bold uppercase tracking-tight md:text-6xl">
+        <h2 className="font-serif text-4xl font-medium tracking-tight md:text-6xl">
           Work Experience
         </h2>
       </FadeIn>

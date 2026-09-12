@@ -9,17 +9,15 @@ import { heroCopy, profile } from '../data/content'
 
 const HeroScene = lazy(() => import('./HeroScene').then((m) => ({ default: m.HeroScene })))
 
-export function Hero({ revealReady }: { revealReady: boolean }) {
+export function Hero() {
   const nameRef = useRef<HTMLHeadingElement>(null)
-  const splitRef = useRef<SplitText | null>(null)
   // Checked once, before any <Canvas> would mount — the whole progressive-
   // enhancement contract (WEBGL_UPGRADE.md) is that detection happens first
   // so there's never a flash between the WebGL and Canvas-2D paths.
   const webglSupported = useMemo(() => hasWebGL(), [])
 
-  // Hide the chars immediately on mount — this runs while the preloader is
-  // still covering the screen, so there's no flash of plain text before the
-  // reveal tween below gets a chance to run.
+  // No preloader gating this anymore — the char reveal plays immediately on
+  // mount and doubles as the page's entrance moment.
   useEffect(() => {
     if (!nameRef.current) return
     const prefersReducedMotion = window.matchMedia(
@@ -29,25 +27,19 @@ export function Hero({ revealReady }: { revealReady: boolean }) {
 
     const split = new SplitText(nameRef.current, { type: 'chars' })
     gsap.set(split.chars, { yPercent: 120, opacity: 0 })
-    splitRef.current = split
-
-    return () => split.revert()
-  }, [])
-
-  // The actual reveal only plays once the preloader has cleared.
-  useEffect(() => {
-    if (!revealReady || !splitRef.current) return
-    const tween = gsap.to(splitRef.current.chars, {
+    const tween = gsap.to(split.chars, {
       yPercent: 0,
       opacity: 1,
       duration: 0.8,
       stagger: 0.03,
       ease: 'expo.out',
     })
+
     return () => {
       tween.kill()
+      split.revert()
     }
-  }, [revealReady])
+  }, [])
 
   return (
     /* `isolate` is load-bearing, not decoration: the WebGL layer below sits at
@@ -77,7 +69,7 @@ export function Hero({ revealReady }: { revealReady: boolean }) {
           <img
             src="/akshay-photo.jpg"
             alt=""
-            className="w-40 rounded-2xl border border-[var(--color-border)] object-cover shadow-[var(--glow-primary)] lg:w-52"
+            className="w-40 rounded-2xl border border-[var(--color-border)] object-cover shadow-lg lg:w-52"
           />
         </Magnetic>
       </div>
@@ -85,7 +77,7 @@ export function Hero({ revealReady }: { revealReady: boolean }) {
       <div className="flex flex-1 flex-col justify-center gap-6">
         <h1
           ref={nameRef}
-          className="text-[13vw] leading-[0.95] font-bold tracking-tight uppercase sm:text-[10vw] md:text-[7.5vw]"
+          className="font-serif text-[13vw] leading-[0.95] font-medium tracking-tight sm:text-[10vw] md:text-[7.5vw]"
         >
           {heroCopy.headline}
         </h1>
@@ -95,7 +87,7 @@ export function Hero({ revealReady }: { revealReady: boolean }) {
           </p>
         </FadeIn>
         <FadeIn delay={0.4}>
-          <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-accent-primary)]">
+          <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-fg)]">
             {heroCopy.positionTag}
           </p>
         </FadeIn>

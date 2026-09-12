@@ -20,7 +20,7 @@ export function About() {
         <div className="mt-16 grid gap-8 border-t border-[var(--color-border)] pt-10 sm:grid-cols-2">
           {education.map((item, i) => (
             <FadeIn key={item.school} delay={0.1 * i}>
-              <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-accent-primary)]">
+              <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-fg)]">
                 {item.period}
               </p>
               <p className="mt-2 font-medium">{item.degree}</p>

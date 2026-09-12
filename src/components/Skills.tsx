@@ -5,7 +5,7 @@ export function Skills() {
   return (
     <section id="skills" className="px-6 py-24 md:px-10 md:py-32">
       <FadeIn>
-        <h2 className="text-4xl font-bold uppercase tracking-tight md:text-6xl">
+        <h2 className="font-serif text-4xl font-medium tracking-tight md:text-6xl">
           Skills
         </h2>
       </FadeIn>
