@@ -7,12 +7,18 @@ import { BufferAttribute, IcosahedronGeometry } from 'three'
  * (RESET.md), replacing the old crystal-shard cluster. A subdivided
  * icosahedron (no GLB/texture pipeline needed — consistent with STATUS4's
  * finding that no 3D-asset generation tool is available in this
- * environment) with per-face vertex colors alternating between the site's
- * beige and ink tones, so the panel pattern is literally built from the
- * site's own palette instead of an invented black/white. */
+ * environment) with per-face vertex colors, so the panel pattern reads
+ * against the site's beige background.
+ *
+ * PANEL_DARK is a purpose-built sandy tan, not --color-fg or --color-muted:
+ * the sphere sits behind the hero headline and sub-line, and a panel that
+ * matched either text color made overlapping letters unreadable (same
+ * luminance, no contrast). Sitting clearly lighter than both text tones
+ * keeps every overlap legible, at the cost of no longer literally reusing a
+ * page token for this one shape. */
 
 const PANEL_LIGHT: [number, number, number] = [0.937, 0.906, 0.847] // #efe7d8 — matches --color-bg
-const PANEL_DARK: [number, number, number] = [0.114, 0.102, 0.09] // #1d1a17 — matches --color-fg
+const PANEL_DARK: [number, number, number] = [0.722, 0.671, 0.561] // #b8ab8f — dedicated tan, lighter than --color-muted
 
 function buildPanelColors(geometry: IcosahedronGeometry) {
   const position = geometry.attributes.position
