@@ -1,78 +1,21 @@
-import { useEffect, useRef, useState, type RefObject } from 'react'
-import { Canvas, useFrame, useThree } from '@react-three/fiber'
+import { useRef, useState } from 'react'
+import { Canvas } from '@react-three/fiber'
 import { PerformanceMonitor } from '@react-three/drei'
-import type { Group } from 'three'
-import { HeadModel } from './HeadModel'
+import { ChromeBlobField } from './ChromeBlobField'
 import { useInView } from '../hooks/useInView'
-import { useScrollScrub } from '../hooks/useScrollScrub'
-import { scrollVelocity } from '../lib/scrollVelocity'
 
 /** Real WebGL scene replacing the old canvas-2D particle network
- * (WEBGL_UPGRADE.md), the low-poly football (RESET.md), and a metaball
- * attempt at a face (BlobFace.tsx, abandoned — no amount of blob-tuning
- * produces real facial anatomy) — now a real sculpted head (HeadModel.tsx),
- * cursor-reactive and scroll-driven. Its MatCap material needs no
- * environment map or lights at all (the whole lit look is baked into the
- * matcap texture), so — unlike the PBR attempt this replaced — there's no
- * PMREMGenerator setup here. */
-
-function HeroSceneContent({
-  progress,
-}: {
-  progress: RefObject<number>
-}) {
-  const pointer = useRef({ x: 0, y: 0 })
-  const groupRef = useRef<Group>(null)
-
-  // Sized against the Canvas's own frustum (a boxed slot, not the full
-  // hero background), not a fixed world radius, so it scales with whatever
-  // box size the layout gives it. viewport.width is in world units at the
-  // camera's distance/FOV — it does NOT grow just because the box's CSS
-  // pixel size grew (that only changes the aspect ratio, which this square
-  // box doesn't), so the old 0.28-of-viewport/capped-at-1.0 sizing (tuned
-  // for a small accent sitting behind the headline) left this filling well
-  // under half its own box once the box became the head's dedicated slot.
-  // r3f recomputes viewport on resize, so this needs no listener of its own.
-  const viewportWidth = useThree((state) => state.viewport.width)
-  const radius = viewportWidth * 0.42
-
-  useEffect(() => {
-    function handleMove(e: PointerEvent) {
-      pointer.current.x = (e.clientX / window.innerWidth) * 2 - 1
-      pointer.current.y = (e.clientY / window.innerHeight) * 2 - 1
-    }
-    window.addEventListener('pointermove', handleMove)
-    return () => window.removeEventListener('pointermove', handleMove)
-  }, [])
-
-  useFrame(() => {
-    const group = groupRef.current
-    if (!group) return
-    const targetX = pointer.current.y * 0.25
-    const targetY = pointer.current.x * 0.35 + progress.current * Math.PI * 0.4
-    // 0.05 (the football's original lerp factor) read as sluggish now that
-    // this object is the hero's focal point rather than a background
-    // decoration — snapped up so the turn-toward-cursor feels responsive.
-    group.rotation.x += (targetX - group.rotation.x) * 0.14
-    group.rotation.y += (targetY - group.rotation.y) * 0.14
-    // Scroll-velocity-reactive intensity: a fast scroll flares the cluster
-    // briefly before it settles back (VISUAL_CRAFT.md).
-    const flare = Math.min(1, Math.abs(scrollVelocity.current) / 60)
-    const targetScale = 1 + flare * 0.06
-    group.scale.setScalar(group.scale.x + (targetScale - group.scale.x) * 0.1)
-  })
-
-  return (
-    <group ref={groupRef}>
-      <HeadModel radius={radius} />
-    </group>
-  )
-}
+ * (WEBGL_UPGRADE.md), the low-poly football (RESET.md), a metaball-mesh
+ * attempt at a face (BlobFace.tsx), and a real sculpted head (HeadModel.tsx)
+ * — now a raymarched SDF chrome blob (ChromeBlobField.tsx). The blob is a
+ * single fullscreen quad; all its geometry, animation, and cursor reaction
+ * live inside its own fragment shader, so there's no scene-level rotation
+ * group or pointer-tracking here anymore — an orthographic camera is all
+ * this Canvas needs to provide. */
 
 export function HeroScene() {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const { ref: viewRef, inView } = useInView<HTMLDivElement>({ threshold: 0 })
-  const progress = useScrollScrub(wrapperRef)
   const [lowQuality, setLowQuality] = useState(false)
 
   return (
@@ -84,9 +27,10 @@ export function HeroScene() {
       className="h-full w-full"
     >
       <Canvas
+        orthographic
         dpr={lowQuality ? 1 : [1, 2]}
         frameloop={inView ? 'always' : 'never'}
-        camera={{ position: [0, 0, 5], fov: 50 }}
+        camera={{ position: [0, 0, 1], zoom: 1 }}
         // preserveDrawingBuffer: the canvas keeps its last rendered frame
         // around instead of the browser clearing it right after compositing
         // — needed for any external tool (or the user's own screenshot) to
@@ -103,7 +47,7 @@ export function HeroScene() {
         }}
       >
         <PerformanceMonitor onDecline={() => setLowQuality(true)} />
-        <HeroSceneContent progress={progress} />
+        <ChromeBlobField />
       </Canvas>
     </div>
   )
