@@ -3,12 +3,17 @@ import { BufferAttribute, BufferGeometry, MeshBasicMaterial } from 'three'
 import { mergeVertices, MarchingCubes as MarchingCubesImpl } from 'three-stdlib'
 
 /** Chrome metaball "face" replacing the old football as the hero's 3D
- * object (gionatannese.com/about reference) — a cluster of merged spheres
- * (a head, a "hair" cluster across the top, two ear bumps) sculpted with
- * two genuinely subtractive balls for the eye sockets, not a texture trick.
- * `MarchingCubes.addBall` takes a signed strength — a negative ball really
- * subtracts from the scalar field before the isosurface is extracted, so
- * the eyes are actual carved geometry.
+ * object (gionatannese.com/about reference) — one dominant round head
+ * with a small cluster of clearly secondary "hair" bumps across the top,
+ * sculpted with two genuinely subtractive balls for the eye sockets, not
+ * a texture trick. `MarchingCubes.addBall` takes a signed strength — a
+ * negative ball really subtracts from the scalar field before the
+ * isosurface is extracted, so the eyes are actual carved geometry.
+ *
+ * First pass also added ear bumps that aren't in the reference at all —
+ * they broke up the silhouette into something that read as "blob cluster"
+ * rather than "head". Dropped them; the read comes from one strong round
+ * mass plus a visibly smaller secondary cluster, not more bumps.
  *
  * Built ONCE into a static BufferGeometry (not per-frame, unlike drei's
  * <MarchingCubes> which recomputes every frame for animated blobs we don't
@@ -17,37 +22,36 @@ import { mergeVertices, MarchingCubes as MarchingCubesImpl } from 'three-stdlib'
  * cost. Ball coordinates are the field's own 0..1 space (0.5 = center);
  * the generated geometry comes out centered near the origin with radius
  * ~1, same convention the football used, so a parent `scale` still maps to
- * a world-space radius. */
+ * a world-space radius. Resolution is deliberately modest — this whole
+ * geometry is generated synchronously on mount, and a higher-resolution
+ * grid was a noticeable stall (the "slow" first-load complaint). */
 
-const RESOLUTION = 64
-const MAX_POLY_COUNT = 65000
+const RESOLUTION = 42
+const MAX_POLY_COUNT = 40000
 
 type Ball = { x: number; y: number; z: number; strength: number; subtract: number }
 
-const HEAD: Ball = { x: 0.5, y: 0.42, z: 0.5, strength: 1.15, subtract: 9 }
+// Strong enough on its own to form a properly round mass in every axis —
+// the earlier version relied on a low global isolation threshold to grow
+// the head large enough, which also let the isosurface reach much further
+// in X/Y (where other balls reinforced it) than in Z (where nothing did),
+// flattening the head front-to-back. A dominant head ball fixes both the
+// roundness and the poly bloat that low isolation caused everywhere else.
+const HEAD: Ball = { x: 0.5, y: 0.4, z: 0.5, strength: 6, subtract: 9 }
 
 const HAIR: Ball[] = [
-  { x: 0.5, y: 0.74, z: 0.5, strength: 0.5, subtract: 10 },
-  { x: 0.36, y: 0.7, z: 0.47, strength: 0.4, subtract: 10 },
-  { x: 0.64, y: 0.7, z: 0.47, strength: 0.4, subtract: 10 },
-  { x: 0.26, y: 0.6, z: 0.44, strength: 0.28, subtract: 11 },
-  { x: 0.74, y: 0.6, z: 0.44, strength: 0.28, subtract: 11 },
-]
-
-const EARS: Ball[] = [
-  { x: 0.19, y: 0.42, z: 0.5, strength: 0.2, subtract: 12 },
-  { x: 0.81, y: 0.42, z: 0.5, strength: 0.2, subtract: 12 },
+  { x: 0.5, y: 0.72, z: 0.48, strength: 0.9, subtract: 10 },
+  { x: 0.38, y: 0.68, z: 0.46, strength: 0.75, subtract: 10 },
+  { x: 0.62, y: 0.68, z: 0.46, strength: 0.75, subtract: 10 },
+  { x: 0.29, y: 0.58, z: 0.44, strength: 0.55, subtract: 11 },
+  { x: 0.71, y: 0.58, z: 0.44, strength: 0.55, subtract: 11 },
 ]
 
 // Negative strength — genuinely subtracts, carving eye sockets rather than
-// painting them on. A ball's influence radius is size*sqrt(strength/
-// subtract); the first attempt at these (strength -0.55, subtract 6) had a
-// radius nearly as large as the head ball itself, carving away most of the
-// front face and flattening the whole head front-to-back instead of
-// leaving two small dimples.
+// painting them on.
 const EYES: Ball[] = [
-  { x: 0.4, y: 0.46, z: 0.66, strength: -0.35, subtract: 28 },
-  { x: 0.6, y: 0.46, z: 0.66, strength: -0.35, subtract: 28 },
+  { x: 0.4, y: 0.43, z: 0.72, strength: -0.4, subtract: 15 },
+  { x: 0.6, y: 0.43, z: 0.72, strength: -0.4, subtract: 15 },
 ]
 
 function buildFaceGeometry(): BufferGeometry {

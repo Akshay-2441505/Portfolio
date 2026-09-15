@@ -1,29 +1,20 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { PerformanceMonitor } from '@react-three/drei'
-import { PMREMGenerator, type Group } from 'three'
-import { RoomEnvironment } from 'three-stdlib'
-import { BlobFace } from './BlobFace'
+import type { Group } from 'three'
+import { HeadModel } from './HeadModel'
 import { useInView } from '../hooks/useInView'
 import { useScrollScrub } from '../hooks/useScrollScrub'
 import { scrollVelocity } from '../lib/scrollVelocity'
 
 /** Real WebGL scene replacing the old canvas-2D particle network
- * (WEBGL_UPGRADE.md), and later the low-poly football (RESET.md) — now a
- * chrome metaball "face" (gionatannese.com/about reference), cursor-
- * reactive and scroll-driven. A full-metal PBR material has no meaningful
- * diffuse response to point lights — its look IS the environment map's
- * reflections — so a studio environment map replaces the old tinted point
- * lights and bloom pass entirely rather than sitting alongside them.
- *
- * The environment is procedurally generated (RoomEnvironment, the same
- * technique Google's model-viewer uses for its default studio look), not
- * fetched — drei's <Environment preset="..."> pulls an HDR file from a
- * third-party CDN, which is one more thing that can go down and isn't
- * needed here. Built inside onCreated (fires once, when the GL context is
- * ready) rather than a useThree()-based effect elsewhere, so the scene
- * object being mutated is a plain callback argument, not a hook return
- * value. */
+ * (WEBGL_UPGRADE.md), the low-poly football (RESET.md), and a metaball
+ * attempt at a face (BlobFace.tsx, abandoned — no amount of blob-tuning
+ * produces real facial anatomy) — now a real sculpted head (HeadModel.tsx),
+ * cursor-reactive and scroll-driven. Its MatCap material needs no
+ * environment map or lights at all (the whole lit look is baked into the
+ * matcap texture), so — unlike the PBR attempt this replaced — there's no
+ * PMREMGenerator setup here. */
 
 function HeroSceneContent({
   progress,
@@ -33,7 +24,7 @@ function HeroSceneContent({
   const pointer = useRef({ x: 0, y: 0 })
   const groupRef = useRef<Group>(null)
 
-  // Sized against the Canvas's own frustum (now a boxed slot, not the full
+  // Sized against the Canvas's own frustum (a boxed slot, not the full
   // hero background), not a fixed world radius, so it scales with whatever
   // box size the layout gives it. r3f recomputes viewport on resize, so
   // this needs no listener of its own.
@@ -54,8 +45,11 @@ function HeroSceneContent({
     if (!group) return
     const targetX = pointer.current.y * 0.25
     const targetY = pointer.current.x * 0.35 + progress.current * Math.PI * 0.4
-    group.rotation.x += (targetX - group.rotation.x) * 0.05
-    group.rotation.y += (targetY - group.rotation.y) * 0.05
+    // 0.05 (the football's original lerp factor) read as sluggish now that
+    // this object is the hero's focal point rather than a background
+    // decoration — snapped up so the turn-toward-cursor feels responsive.
+    group.rotation.x += (targetX - group.rotation.x) * 0.14
+    group.rotation.y += (targetY - group.rotation.y) * 0.14
     // Scroll-velocity-reactive intensity: a fast scroll flares the cluster
     // briefly before it settles back (VISUAL_CRAFT.md).
     const flare = Math.min(1, Math.abs(scrollVelocity.current) / 60)
@@ -65,7 +59,7 @@ function HeroSceneContent({
 
   return (
     <group ref={groupRef}>
-      <BlobFace radius={radius} />
+      <HeadModel radius={radius} />
     </group>
   )
 }
@@ -95,14 +89,6 @@ export function HeroScene() {
         // this size.
         gl={{ alpha: true, antialias: !lowQuality, preserveDrawingBuffer: true }}
         onCreated={({ gl, scene, camera }) => {
-          const pmrem = new PMREMGenerator(gl)
-          scene.environment = pmrem.fromScene(RoomEnvironment(), 0.04).texture
-          pmrem.dispose()
-          // RoomEnvironment's default exposure reads as near-black through a
-          // near-mirror material at normal exposure — a real chrome object
-          // needs a bright, even light source, not just a couple of panels.
-          gl.toneMappingExposure = 1.5
-
           if (import.meta.env.DEV) {
             const w = window as unknown as Record<string, unknown>
             w.__heroGL = gl

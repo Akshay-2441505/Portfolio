@@ -46,7 +46,7 @@ export function Hero() {
       id="top"
       className="relative flex h-screen flex-col justify-between overflow-hidden px-6 pt-24 pb-10 md:px-10"
     >
-      {/* The chrome metaball face (gionatannese.com/about reference) —
+      {/* The chrome head model (gionatannese.com/about reference) —
        * replaces both the old full-bleed football-behind-text layer and the
        * headshot photo that used to sit here (the photo still appears in
        * About, so nothing is lost). Boxed rather than full-bleed: it no
@@ -54,7 +54,7 @@ export function Hero() {
        * legibility problem a large object behind text caused before.
        * Hidden below md for the same reason the photo was — the headline
        * already claims most of the width on narrow viewports. */}
-      <div className="pointer-events-none absolute right-6 bottom-16 hidden h-64 w-64 md:block lg:right-10 lg:h-80 lg:w-80">
+      <div className="pointer-events-none absolute right-6 bottom-10 hidden h-96 w-96 md:block lg:right-10 lg:h-[34rem] lg:w-[34rem]">
         {webglSupported ? (
           <Suspense fallback={<FrameSequence />}>
             <HeroScene />
