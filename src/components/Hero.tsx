@@ -42,15 +42,19 @@ export function Hero() {
   }, [])
 
   return (
-    /* `isolate` is load-bearing, not decoration: the WebGL layer below sits at
-     * -z-10, and without a stacking context on this section that layer
-     * resolves against the ROOT one — painting underneath body's opaque
-     * radial-gradient background, so the football renders but is invisible. */
     <section
       id="top"
-      className="relative isolate flex h-screen flex-col justify-between overflow-hidden px-6 pt-24 pb-10 md:px-10"
+      className="relative flex h-screen flex-col justify-between overflow-hidden px-6 pt-24 pb-10 md:px-10"
     >
-      <div className="pointer-events-none absolute inset-0 -z-10 h-full w-full">
+      {/* The chrome metaball face (gionatannese.com/about reference) —
+       * replaces both the old full-bleed football-behind-text layer and the
+       * headshot photo that used to sit here (the photo still appears in
+       * About, so nothing is lost). Boxed rather than full-bleed: it no
+       * longer needs to sit behind the headline, which also sidesteps the
+       * legibility problem a large object behind text caused before.
+       * Hidden below md for the same reason the photo was — the headline
+       * already claims most of the width on narrow viewports. */}
+      <div className="pointer-events-none absolute right-6 bottom-16 hidden h-64 w-64 md:block lg:right-10 lg:h-80 lg:w-80">
         {webglSupported ? (
           <Suspense fallback={<FrameSequence />}>
             <HeroScene />
@@ -58,20 +62,6 @@ export function Hero() {
         ) : (
           <FrameSequence />
         )}
-      </div>
-
-      {/* Magnet-hover hero portrait (TECH_SPEC.md §2, confirmed to build in
-       * WEBGL_UPGRADE.md) — a real photo, not a purchased/generic 3D avatar.
-       * Hidden below md: the headline already claims most of the width on
-       * narrow viewports and there's no room to add it without crowding. */}
-      <div className="pointer-events-none absolute right-6 bottom-28 hidden md:block lg:right-10">
-        <Magnetic strength={26} className="pointer-events-auto">
-          <img
-            src="/akshay-photo.jpg"
-            alt=""
-            className="w-40 rounded-2xl border border-[var(--color-border)] object-cover shadow-lg lg:w-52"
-          />
-        </Magnetic>
       </div>
 
       <div className="flex flex-1 flex-col justify-center gap-6">

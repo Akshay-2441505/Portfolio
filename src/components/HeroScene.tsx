@@ -1,17 +1,29 @@
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import { PerformanceMonitor } from '@react-three/drei'
-import { Bloom, EffectComposer } from '@react-three/postprocessing'
-import type { Group } from 'three'
-import { Football } from './Football'
+import { PMREMGenerator, type Group } from 'three'
+import { RoomEnvironment } from 'three-stdlib'
+import { BlobFace } from './BlobFace'
 import { useInView } from '../hooks/useInView'
 import { useScrollScrub } from '../hooks/useScrollScrub'
 import { scrollVelocity } from '../lib/scrollVelocity'
 
 /** Real WebGL scene replacing the old canvas-2D particle network
- * (WEBGL_UPGRADE.md). Holds the site's single 3D object — the procedural
- * faceted football (RESET.md) — cursor-reactive and scroll-driven, with a
- * bloom pass so its lit facet edges read as catching light. */
+ * (WEBGL_UPGRADE.md), and later the low-poly football (RESET.md) — now a
+ * chrome metaball "face" (gionatannese.com/about reference), cursor-
+ * reactive and scroll-driven. A full-metal PBR material has no meaningful
+ * diffuse response to point lights — its look IS the environment map's
+ * reflections — so a studio environment map replaces the old tinted point
+ * lights and bloom pass entirely rather than sitting alongside them.
+ *
+ * The environment is procedurally generated (RoomEnvironment, the same
+ * technique Google's model-viewer uses for its default studio look), not
+ * fetched — drei's <Environment preset="..."> pulls an HDR file from a
+ * third-party CDN, which is one more thing that can go down and isn't
+ * needed here. Built inside onCreated (fires once, when the GL context is
+ * ready) rather than a useThree()-based effect elsewhere, so the scene
+ * object being mutated is a plain callback argument, not a hook return
+ * value. */
 
 function HeroSceneContent({
   progress,
@@ -21,12 +33,9 @@ function HeroSceneContent({
   const pointer = useRef({ x: 0, y: 0 })
   const groupRef = useRef<Group>(null)
 
-  // Size the ball against the frustum, not a fixed world radius. A fixed 1.4
-  // was wider than the ~2.15 world units visible at a 375px viewport, so it
-  // bled off both edges; even at 1.0 it filled 93% of the width and washed
-  // out the sub-line and meta-line sitting on top of it. Capping the diameter
-  // at ~56% of the visible width keeps it clearly a ball on phones while
-  // desktop still gets the full 1.0. r3f recomputes viewport on resize, so
+  // Sized against the Canvas's own frustum (now a boxed slot, not the full
+  // hero background), not a fixed world radius, so it scales with whatever
+  // box size the layout gives it. r3f recomputes viewport on resize, so
   // this needs no listener of its own.
   const viewportWidth = useThree((state) => state.viewport.width)
   const radius = Math.min(1.0, viewportWidth * 0.28)
@@ -56,7 +65,7 @@ function HeroSceneContent({
 
   return (
     <group ref={groupRef}>
-      <Football radius={radius} spin={0.12} />
+      <BlobFace radius={radius} />
     </group>
   )
 }
@@ -86,6 +95,14 @@ export function HeroScene() {
         // this size.
         gl={{ alpha: true, antialias: !lowQuality, preserveDrawingBuffer: true }}
         onCreated={({ gl, scene, camera }) => {
+          const pmrem = new PMREMGenerator(gl)
+          scene.environment = pmrem.fromScene(RoomEnvironment(), 0.04).texture
+          pmrem.dispose()
+          // RoomEnvironment's default exposure reads as near-black through a
+          // near-mirror material at normal exposure — a real chrome object
+          // needs a bright, even light source, not just a couple of panels.
+          gl.toneMappingExposure = 1.5
+
           if (import.meta.env.DEV) {
             const w = window as unknown as Record<string, unknown>
             w.__heroGL = gl
@@ -95,15 +112,7 @@ export function HeroScene() {
         }}
       >
         <PerformanceMonitor onDecline={() => setLowQuality(true)} />
-        <ambientLight intensity={0.5} />
-        <pointLight position={[2, 2, 3]} intensity={1.4} color="#d6cdbe" />
-        <pointLight position={[-2, -1, -2]} intensity={0.5} color="#efe7d8" />
         <HeroSceneContent progress={progress} />
-        {!lowQuality && (
-          <EffectComposer>
-            <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} intensity={0.6} />
-          </EffectComposer>
-        )}
       </Canvas>
     </div>
   )
