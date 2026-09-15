@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useGLTF } from '@react-three/drei'
-import {
-  Box3,
-  CanvasTexture,
-  Mesh,
-  MeshMatcapMaterial,
-  SRGBColorSpace,
-  Vector3,
-  type Group,
-} from 'three'
+import { Box3, CanvasTexture, Mesh, MeshMatcapMaterial, SRGBColorSpace, Vector3, type Group } from 'three'
 
 /** The real replacement for the metaball attempt (BlobFace.tsx) — a real
  * sculpted head (male_head.glb, CC-BY, Alexander Antipov via Sketchfab:
@@ -28,7 +20,16 @@ import {
  *
  * The matcap texture itself is generated on a canvas rather than fetched,
  * for the same reason the environment map was made procedural before:
- * no external asset, nothing that can fail to load. */
+ * no external asset, nothing that can fail to load.
+ *
+ * Shifted from neutral silver-white to the site's own ink/beige tones
+ * (matching the tonal-beige palette everything else uses) rather than a
+ * generic chrome default — and given a much broader, lower-peak highlight
+ * than a typical sharp chrome matcap. The tight, near-white highlight in
+ * the first version blew out to flat white wherever it landed on a convex
+ * bulge (the eyes, most noticeably — "no eyes" was really a highlight
+ * blowout, not a modeling gap), and a broad soft highlight is far less
+ * likely to fully saturate on any one small feature. */
 function createChromeMatcap(): CanvasTexture {
   const size = 256
   const canvas = document.createElement('canvas')
@@ -36,29 +37,39 @@ function createChromeMatcap(): CanvasTexture {
   canvas.height = size
   const ctx = canvas.getContext('2d')!
 
-  ctx.fillStyle = '#8f8674'
+  // Base fill — a dark warm ink-brown, between --color-muted and
+  // --color-fg, not a neutral mid-gray.
+  ctx.fillStyle = '#5c5544'
   ctx.fillRect(0, 0, size, size)
 
-  // Fresnel-style dark rim — chrome reads as near-black at the silhouette
-  // edge, where the surface normal points away from the viewer.
-  const rim = ctx.createRadialGradient(size / 2, size / 2, size * 0.3, size / 2, size / 2, size * 0.5)
-  rim.addColorStop(0, 'rgba(20,18,15,0)')
-  rim.addColorStop(1, 'rgba(20,18,15,0.95)')
+  // Fresnel-style dark rim, fading to --color-fg (ink) rather than pure
+  // black, at the silhouette edge where the surface normal points away
+  // from the viewer.
+  const rim = ctx.createRadialGradient(size / 2, size / 2, size * 0.28, size / 2, size / 2, size * 0.5)
+  rim.addColorStop(0, 'rgba(29,26,23,0)')
+  rim.addColorStop(1, 'rgba(29,26,23,0.92)')
   ctx.fillStyle = rim
   ctx.fillRect(0, 0, size, size)
 
-  // Primary key-light highlight, upper-left.
-  const key = ctx.createRadialGradient(size * 0.32, size * 0.28, 0, size * 0.32, size * 0.28, size * 0.32)
-  key.addColorStop(0, 'rgba(255,252,244,1)')
-  key.addColorStop(0.5, 'rgba(255,252,244,0.55)')
-  key.addColorStop(1, 'rgba(255,252,244,0)')
+  // Primary key-light highlight, upper-left — --color-bg (warm cream).
+  // Widening this alone (an earlier attempt) didn't stop small convex
+  // features (the eyeballs) from blowing out: a small sphere's surface
+  // covers a huge range of normal directions within a tiny screen area, so
+  // some part of it samples near the peak of almost any highlight
+  // regardless of how broad. Capping the peak opacity well below full is
+  // what actually keeps convex bulges from reading as solid flat-white.
+  const key = ctx.createRadialGradient(size * 0.34, size * 0.3, 0, size * 0.34, size * 0.3, size * 0.5)
+  key.addColorStop(0, 'rgba(239,231,216,0.42)')
+  key.addColorStop(0.6, 'rgba(239,231,216,0.2)')
+  key.addColorStop(1, 'rgba(239,231,216,0)')
   ctx.fillStyle = key
   ctx.fillRect(0, 0, size, size)
 
-  // Softer fill-light highlight, lower-right — keeps the far side of the
-  // form readable instead of falling straight to the dark rim.
-  const fill = ctx.createRadialGradient(size * 0.7, size * 0.72, 0, size * 0.7, size * 0.72, size * 0.3)
-  fill.addColorStop(0, 'rgba(214,205,190,0.55)')
+  // Softer fill-light highlight, lower-right, --color-deep (taupe) — keeps
+  // the far side of the form readable instead of falling straight to the
+  // dark rim.
+  const fill = ctx.createRadialGradient(size * 0.68, size * 0.7, 0, size * 0.68, size * 0.7, size * 0.36)
+  fill.addColorStop(0, 'rgba(214,205,190,0.5)')
   fill.addColorStop(1, 'rgba(214,205,190,0)')
   ctx.fillStyle = fill
   ctx.fillRect(0, 0, size, size)

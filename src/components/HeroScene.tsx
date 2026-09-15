@@ -26,10 +26,15 @@ function HeroSceneContent({
 
   // Sized against the Canvas's own frustum (a boxed slot, not the full
   // hero background), not a fixed world radius, so it scales with whatever
-  // box size the layout gives it. r3f recomputes viewport on resize, so
-  // this needs no listener of its own.
+  // box size the layout gives it. viewport.width is in world units at the
+  // camera's distance/FOV — it does NOT grow just because the box's CSS
+  // pixel size grew (that only changes the aspect ratio, which this square
+  // box doesn't), so the old 0.28-of-viewport/capped-at-1.0 sizing (tuned
+  // for a small accent sitting behind the headline) left this filling well
+  // under half its own box once the box became the head's dedicated slot.
+  // r3f recomputes viewport on resize, so this needs no listener of its own.
   const viewportWidth = useThree((state) => state.viewport.width)
-  const radius = Math.min(1.0, viewportWidth * 0.28)
+  const radius = viewportWidth * 0.42
 
   useEffect(() => {
     function handleMove(e: PointerEvent) {

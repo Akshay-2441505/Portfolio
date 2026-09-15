@@ -54,7 +54,7 @@ export function Hero() {
        * legibility problem a large object behind text caused before.
        * Hidden below md for the same reason the photo was — the headline
        * already claims most of the width on narrow viewports. */}
-      <div className="pointer-events-none absolute right-6 bottom-10 hidden h-96 w-96 md:block lg:right-10 lg:h-[34rem] lg:w-[34rem]">
+      <div className="pointer-events-none absolute right-6 bottom-10 hidden h-80 w-80 md:block lg:right-10 lg:h-[28rem] lg:w-[28rem]">
         {webglSupported ? (
           <Suspense fallback={<FrameSequence />}>
             <HeroScene />
