@@ -51,20 +51,29 @@ const fragmentShader = /* glsl */ `
   }
 
   float map(vec3 p) {
-    // Central mass, gently breathing.
-    float d = sdSphere(p, 0.85 + sin(uTime * 0.6) * 0.04);
+    // Smaller core (was 0.85) with satellites clustered in a fixed arc on
+    // top instead of orbiting the full equator — the earlier version had
+    // ang sweep a full 360° over time, so at any moment only a couple of
+    // satellites faced the camera near the top and the rest were swung to
+    // the sides/behind, reading as faint bumps on one big sphere rather
+    // than a crown of distinct lobes. Satellites are also sized closer to
+    // the core now (was ~1/3, now ~1/2) so they bulge visibly instead of
+    // mostly just smoothing the core's surface.
+    float coreR = 0.62;
+    float d = sdSphere(p, coreR + sin(uTime * 0.6) * 0.02);
 
     for (int i = 1; i < NUM_BALLS; i++) {
       float fi = float(i);
-      float ang = fi * 2.4 + uTime * 0.3;
-      float orbitR = 0.5 + 0.08 * sin(uTime * 0.4 + fi * 1.7);
+      float ang = (fi - 2.5) * 0.85; // fixed slot on top, not a full sweep
+      float radius = 0.34 + 0.03 * sin(uTime * 0.5 + fi * 1.7);
+      float sway = sin(uTime * 0.4 + fi * 1.3) * 0.08;
       vec3 c = vec3(
-        cos(ang) * orbitR,
-        0.5 + sin(uTime * 0.5 + fi * 1.3) * 0.18,
-        sin(ang) * orbitR * 0.6
+        cos(ang) * radius + sway,
+        0.42 + 0.10 * sin(uTime * 0.7 + fi * 2.1), // sits above a smaller core
+        sin(ang) * radius * 0.45
       );
-      float r = 0.26 + 0.05 * sin(uTime * 0.8 + fi * 2.1);
-      d = smin(d, sdSphere(p - c, r), 0.35);
+      float r = 0.20 + 0.035 * sin(uTime * 0.8 + fi * 2.3); // bigger relative to core
+      d = smin(d, sdSphere(p - c, r), 0.22); // slightly less smoothing
     }
 
     return d;
