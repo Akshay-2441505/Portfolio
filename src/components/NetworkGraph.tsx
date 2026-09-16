@@ -22,10 +22,11 @@ import { gsap } from '../lib/gsap'
  * 5. Occasional new connections — a dormant edge draws in and an active
  *    one fades out every few seconds, so the graph slowly evolves
  *    instead of looping one fixed shape forever.
- * 6. Shape-shift on hover — the same node/edge topology re-arranges into
- *    a different one of several hand-placed layouts each time the
- *    pointer enters the graph, so it reads as the network reorganizing
- *    itself rather than a static diagram.
+ * 6. Shape-shift — the same node/edge topology re-arranges into a
+ *    different one of several hand-placed layouts, either when the
+ *    pointer enters the graph or, if it's simply left alone, on its own
+ *    every 4-5s — so there's always something to notice whether or not
+ *    a visitor interacts with it.
  *
  * Node positions are read live from the DOM (each circle's own cx/cy)
  * rather than the static layout constants wherever "current position"
@@ -35,7 +36,19 @@ import { gsap } from '../lib/gsap'
 const VIEWBOX_W = 400
 const VIEWBOX_H = 260
 
-type NodeId = 'n1' | 'n2' | 'n3' | 'n4' | 'n5' | 'n6' | 'n7' | 'n8'
+type NodeId =
+  | 'n1'
+  | 'n2'
+  | 'n3'
+  | 'n4'
+  | 'n5'
+  | 'n6'
+  | 'n7'
+  | 'n8'
+  | 'n9'
+  | 'n10'
+  | 'n11'
+  | 'n12'
 type EdgeDef = { id: string; a: NodeId; b: NodeId }
 type Layout = Record<NodeId, { x: number; y: number }>
 
@@ -48,6 +61,10 @@ const NODE_RADII: Record<NodeId, number> = {
   n6: 5,
   n7: 4,
   n8: 4,
+  n9: 6,
+  n10: 4,
+  n11: 5,
+  n12: 4,
 }
 const NODE_IDS = Object.keys(NODE_RADII) as NodeId[]
 
@@ -64,53 +81,79 @@ const EDGES: EdgeDef[] = [
   { id: 'e10', a: 'n1', b: 'n8' },
   { id: 'e11', a: 'n3', b: 'n8' },
   { id: 'e12', a: 'n2', b: 'n5' },
+  { id: 'e13', a: 'n5', b: 'n9' },
+  { id: 'e14', a: 'n9', b: 'n7' },
+  { id: 'e15', a: 'n6', b: 'n10' },
+  { id: 'e16', a: 'n10', b: 'n12' },
+  { id: 'e17', a: 'n7', b: 'n12' },
+  { id: 'e18', a: 'n8', b: 'n11' },
+  { id: 'e19', a: 'n1', b: 'n11' },
+  { id: 'e20', a: 'n9', b: 'n12' },
 ]
 
-const INITIAL_EDGE_IDS = new Set(['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8'])
+const INITIAL_EDGE_IDS = new Set([
+  'e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8', 'e9', 'e10', 'e11', 'e12', 'e13', 'e14',
+])
 
-// Same 8 nodes, same edges (topology never changes) — only where each node
+// Same 12 nodes, same edges (topology never changes) — only where each node
 // sits changes between these. Hand-placed rather than randomized, so every
 // layout still reads as an intentional composition, not a jumble.
 const LAYOUTS: Record<string, Layout> = {
   default: {
-    n1: { x: 60, y: 95 },
-    n2: { x: 165, y: 50 },
-    n3: { x: 115, y: 175 },
-    n4: { x: 260, y: 95 },
-    n5: { x: 335, y: 65 },
-    n6: { x: 235, y: 195 },
-    n7: { x: 330, y: 175 },
-    n8: { x: 35, y: 205 },
+    n1: { x: 55, y: 90 },
+    n2: { x: 150, y: 45 },
+    n3: { x: 105, y: 165 },
+    n4: { x: 240, y: 85 },
+    n5: { x: 310, y: 55 },
+    n6: { x: 215, y: 185 },
+    n7: { x: 305, y: 165 },
+    n8: { x: 30, y: 195 },
+    n9: { x: 355, y: 100 },
+    n10: { x: 170, y: 230 },
+    n11: { x: 75, y: 30 },
+    n12: { x: 270, y: 220 },
   },
-  arc: {
-    n1: { x: 40, y: 180 },
-    n2: { x: 110, y: 90 },
-    n3: { x: 190, y: 50 },
-    n4: { x: 270, y: 60 },
-    n5: { x: 340, y: 110 },
-    n6: { x: 320, y: 190 },
-    n7: { x: 230, y: 220 },
-    n8: { x: 130, y: 210 },
+  ring: {
+    n1: { x: 30, y: 190 },
+    n2: { x: 70, y: 110 },
+    n3: { x: 130, y: 55 },
+    n4: { x: 200, y: 32 },
+    n5: { x: 270, y: 42 },
+    n6: { x: 330, y: 85 },
+    n7: { x: 365, y: 150 },
+    n8: { x: 340, y: 215 },
+    n9: { x: 270, y: 238 },
+    n10: { x: 190, y: 228 },
+    n11: { x: 120, y: 218 },
+    n12: { x: 60, y: 180 },
   },
   cluster: {
-    n1: { x: 150, y: 80 },
-    n2: { x: 205, y: 55 },
-    n3: { x: 160, y: 145 },
-    n4: { x: 235, y: 105 },
-    n5: { x: 255, y: 60 },
-    n6: { x: 210, y: 175 },
-    n7: { x: 275, y: 150 },
-    n8: { x: 110, y: 130 },
+    n1: { x: 160, y: 90 },
+    n2: { x: 210, y: 60 },
+    n3: { x: 175, y: 140 },
+    n4: { x: 240, y: 105 },
+    n5: { x: 255, y: 65 },
+    n6: { x: 220, y: 165 },
+    n7: { x: 280, y: 145 },
+    n8: { x: 130, y: 120 },
+    n9: { x: 290, y: 95 },
+    n10: { x: 200, y: 190 },
+    n11: { x: 150, y: 60 },
+    n12: { x: 250, y: 190 },
   },
   grid: {
-    n1: { x: 55, y: 55 },
-    n2: { x: 180, y: 55 },
-    n3: { x: 305, y: 55 },
-    n4: { x: 55, y: 150 },
-    n5: { x: 180, y: 150 },
-    n6: { x: 305, y: 150 },
-    n7: { x: 120, y: 220 },
-    n8: { x: 245, y: 220 },
+    n1: { x: 50, y: 55 },
+    n2: { x: 150, y: 55 },
+    n3: { x: 250, y: 55 },
+    n4: { x: 350, y: 55 },
+    n5: { x: 50, y: 140 },
+    n6: { x: 150, y: 140 },
+    n7: { x: 250, y: 140 },
+    n8: { x: 350, y: 140 },
+    n9: { x: 50, y: 220 },
+    n10: { x: 150, y: 220 },
+    n11: { x: 250, y: 220 },
+    n12: { x: 350, y: 220 },
   },
 }
 const LAYOUT_NAMES = Object.keys(LAYOUTS)
@@ -133,8 +176,8 @@ export function NetworkGraph() {
       ).matches
 
       // Reads live DOM position rather than a layout constant — after the
-      // first hover-triggered shape shift, the constants no longer
-      // describe where anything currently is.
+      // first shape shift, the constants no longer describe where
+      // anything currently is.
       function getNodePos(id: NodeId) {
         const el = nodeEls.current[id]
         if (el) return { x: el.cx.baseVal.value, y: el.cy.baseVal.value }
@@ -186,12 +229,12 @@ export function NetworkGraph() {
       initialEdges.forEach((edge, i) => {
         const el = edgeEls.current[edge.id]
         if (!el) return
-        entrance.to(el, { strokeDashoffset: 0, duration: 0.6, ease: 'power2.out' }, i * 0.12)
+        entrance.to(el, { strokeDashoffset: 0, duration: 0.6, ease: 'power2.out' }, i * 0.08)
       })
       NODE_IDS.forEach((id, i) => {
         const el = nodeEls.current[id]
         if (!el) return
-        entrance.to(el, { scale: 1, duration: 0.5, ease: 'back.out(2.2)' }, 0.25 + i * 0.08)
+        entrance.to(el, { scale: 1, duration: 0.5, ease: 'back.out(2.2)' }, 0.25 + i * 0.06)
       })
 
       // ---- 2. Idle breathing, staggered per node ----
@@ -232,7 +275,7 @@ export function NetworkGraph() {
         const ids = Array.from(activeEdgeIds)
         if (!ids.length) return
         launchSignal(ids[Math.floor(Math.random() * ids.length)])
-      }, 900)
+      }, 700)
 
       // ---- 5. Occasional new connections forming ----
       const swapInterval = window.setInterval(() => {
@@ -296,7 +339,7 @@ export function NetworkGraph() {
       }
       gsap.ticker.add(updateProximity)
 
-      // ---- 6. Shape-shift on hover ----
+      // ---- 6. Shape-shift, on hover or every 4-5s left alone ----
       function shiftToLayout(name: string) {
         const layout = LAYOUTS[name]
         const tl = gsap.timeline({
@@ -311,22 +354,33 @@ export function NetworkGraph() {
         })
       }
 
-      function handleEnter() {
+      let autoShiftTimer = 0
+      function scheduleAutoShift() {
+        window.clearTimeout(autoShiftTimer)
+        autoShiftTimer = window.setTimeout(triggerShift, 4000 + Math.random() * 1000)
+      }
+      function triggerShift() {
         const options = LAYOUT_NAMES.filter((n) => n !== currentLayout.current)
         const next = options[Math.floor(Math.random() * options.length)]
         currentLayout.current = next
         shiftToLayout(next)
+        scheduleAutoShift()
       }
+      scheduleAutoShift()
 
+      // Hovering triggers an immediate shift too, and — since triggerShift
+      // itself reschedules — the idle timer restarts from here rather than
+      // firing again right on top of the hover-triggered one.
       const svgEl = rootRef.current
-      svgEl?.addEventListener('pointerenter', handleEnter)
+      svgEl?.addEventListener('pointerenter', triggerShift)
 
       return () => {
         window.clearInterval(signalInterval)
         window.clearInterval(swapInterval)
+        window.clearTimeout(autoShiftTimer)
         window.removeEventListener('pointermove', handleMove)
         gsap.ticker.remove(updateProximity)
-        svgEl?.removeEventListener('pointerenter', handleEnter)
+        svgEl?.removeEventListener('pointerenter', triggerShift)
       }
     },
     { scope: rootRef },
