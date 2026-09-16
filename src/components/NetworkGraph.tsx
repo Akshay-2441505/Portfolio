@@ -155,6 +155,37 @@ const LAYOUTS: Record<string, Layout> = {
     n11: { x: 250, y: 220 },
     n12: { x: 350, y: 220 },
   },
+  spiral: {
+    n1: { x: 200, y: 130 },
+    n2: { x: 230, y: 115 },
+    n3: { x: 255, y: 135 },
+    n4: { x: 250, y: 165 },
+    n5: { x: 215, y: 180 },
+    n6: { x: 180, y: 170 },
+    n7: { x: 165, y: 135 },
+    n8: { x: 180, y: 100 },
+    n9: { x: 215, y: 85 },
+    n10: { x: 260, y: 95 },
+    n11: { x: 290, y: 130 },
+    n12: { x: 280, y: 175 },
+  },
+  // A root branching down through two tiers — the only hierarchical one
+  // of the set, so edges that skip a level (the topology never changes)
+  // read as clear "long connections" cutting across neat levels.
+  tree: {
+    n2: { x: 200, y: 35 },
+    n1: { x: 110, y: 95 },
+    n4: { x: 200, y: 95 },
+    n9: { x: 290, y: 95 },
+    n3: { x: 60, y: 165 },
+    n8: { x: 140, y: 165 },
+    n5: { x: 170, y: 165 },
+    n6: { x: 230, y: 165 },
+    n7: { x: 260, y: 165 },
+    n12: { x: 340, y: 165 },
+    n11: { x: 100, y: 225 },
+    n10: { x: 300, y: 225 },
+  },
 }
 const LAYOUT_NAMES = Object.keys(LAYOUTS)
 
