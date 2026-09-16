@@ -1,20 +1,13 @@
 import { Download } from 'lucide-react'
-import { lazy, Suspense, useEffect, useMemo, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { FadeIn } from './FadeIn'
-import { FrameSequence } from './FrameSequence'
 import { Magnetic } from './Magnetic'
+import { NetworkGraph } from './NetworkGraph'
 import { gsap, SplitText } from '../lib/gsap'
-import { hasWebGL } from '../lib/webgl'
 import { heroCopy, profile } from '../data/content'
-
-const HeroScene = lazy(() => import('./HeroScene').then((m) => ({ default: m.HeroScene })))
 
 export function Hero() {
   const nameRef = useRef<HTMLHeadingElement>(null)
-  // Checked once, before any <Canvas> would mount — the whole progressive-
-  // enhancement contract (WEBGL_UPGRADE.md) is that detection happens first
-  // so there's never a flash between the WebGL and Canvas-2D paths.
-  const webglSupported = useMemo(() => hasWebGL(), [])
 
   // No preloader gating this anymore — the char reveal plays immediately on
   // mount and doubles as the page's entrance moment.
@@ -46,22 +39,15 @@ export function Hero() {
       id="top"
       className="relative flex h-screen flex-col justify-between overflow-hidden px-6 pt-24 pb-10 md:px-10"
     >
-      {/* The chrome head model (gionatannese.com/about reference) —
-       * replaces both the old full-bleed football-behind-text layer and the
-       * headshot photo that used to sit here (the photo still appears in
-       * About, so nothing is lost). Boxed rather than full-bleed: it no
-       * longer needs to sit behind the headline, which also sidesteps the
-       * legibility problem a large object behind text caused before.
-       * Hidden below md for the same reason the photo was — the headline
-       * already claims most of the width on narrow viewports. */}
+      {/* A quiet node network standing in for the hero's old 3D showpiece
+       * (football → metaball face → sculpted head → raymarched chrome blob
+       * — none of it landed). Plain SVG/GSAP, no WebGL, no progressive-
+       * enhancement fallback needed. Boxed rather than full-bleed so it
+       * doesn't sit behind the headline. Hidden below md for the same
+       * reason the old headshot photo was — the headline already claims
+       * most of the width on narrow viewports. */}
       <div className="pointer-events-none absolute right-6 bottom-10 hidden h-80 w-80 md:block lg:right-10 lg:h-[28rem] lg:w-[28rem]">
-        {webglSupported ? (
-          <Suspense fallback={<FrameSequence />}>
-            <HeroScene />
-          </Suspense>
-        ) : (
-          <FrameSequence />
-        )}
+        <NetworkGraph />
       </div>
 
       <div className="flex flex-1 flex-col justify-center gap-6">
