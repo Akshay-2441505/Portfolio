@@ -9,7 +9,7 @@ import { gsap } from '../lib/gsap'
  * prior attempt at this slot, it's plain SVG/DOM: no WebGL, no per-pixel
  * shader cost, no progressive-enhancement fallback needed at all.
  *
- * Five things happen, layered on top of each other:
+ * Six things happen, layered on top of each other:
  * 1. Entrance — edges draw themselves in (stroke-dashoffset), nodes pop
  *    in right after with a back.out snap.
  * 2. Idle breathing — each node pulses on its own staggered repeat/yoyo
@@ -21,24 +21,35 @@ import { gsap } from '../lib/gsap'
  *    MotionPathPlugin.
  * 5. Occasional new connections — a dormant edge draws in and an active
  *    one fades out every few seconds, so the graph slowly evolves
- *    instead of looping one fixed shape forever. */
+ *    instead of looping one fixed shape forever.
+ * 6. Shape-shift on hover — the same node/edge topology re-arranges into
+ *    a different one of several hand-placed layouts each time the
+ *    pointer enters the graph, so it reads as the network reorganizing
+ *    itself rather than a static diagram.
+ *
+ * Node positions are read live from the DOM (each circle's own cx/cy)
+ * rather than the static layout constants wherever "current position"
+ * matters at runtime (proximity glow, edge redraws) — once #6 exists,
+ * the constants only describe each layout's target, not the truth. */
 
 const VIEWBOX_W = 400
 const VIEWBOX_H = 260
 
-type NodeDef = { id: string; x: number; y: number; r: number }
-type EdgeDef = { id: string; a: string; b: string }
+type NodeId = 'n1' | 'n2' | 'n3' | 'n4' | 'n5' | 'n6' | 'n7' | 'n8'
+type EdgeDef = { id: string; a: NodeId; b: NodeId }
+type Layout = Record<NodeId, { x: number; y: number }>
 
-const NODES: NodeDef[] = [
-  { id: 'n1', x: 60, y: 95, r: 5 },
-  { id: 'n2', x: 165, y: 50, r: 9 },
-  { id: 'n3', x: 115, y: 175, r: 5 },
-  { id: 'n4', x: 260, y: 95, r: 7 },
-  { id: 'n5', x: 335, y: 65, r: 4 },
-  { id: 'n6', x: 235, y: 195, r: 5 },
-  { id: 'n7', x: 330, y: 175, r: 4 },
-  { id: 'n8', x: 35, y: 205, r: 4 },
-]
+const NODE_RADII: Record<NodeId, number> = {
+  n1: 5,
+  n2: 9,
+  n3: 5,
+  n4: 7,
+  n5: 4,
+  n6: 5,
+  n7: 4,
+  n8: 4,
+}
+const NODE_IDS = Object.keys(NODE_RADII) as NodeId[]
 
 const EDGES: EdgeDef[] = [
   { id: 'e1', a: 'n1', b: 'n2' },
@@ -57,13 +68,54 @@ const EDGES: EdgeDef[] = [
 
 const INITIAL_EDGE_IDS = new Set(['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7', 'e8'])
 
-function nodeById(id: string) {
-  return NODES.find((n) => n.id === id)!
+// Same 8 nodes, same edges (topology never changes) — only where each node
+// sits changes between these. Hand-placed rather than randomized, so every
+// layout still reads as an intentional composition, not a jumble.
+const LAYOUTS: Record<string, Layout> = {
+  default: {
+    n1: { x: 60, y: 95 },
+    n2: { x: 165, y: 50 },
+    n3: { x: 115, y: 175 },
+    n4: { x: 260, y: 95 },
+    n5: { x: 335, y: 65 },
+    n6: { x: 235, y: 195 },
+    n7: { x: 330, y: 175 },
+    n8: { x: 35, y: 205 },
+  },
+  arc: {
+    n1: { x: 40, y: 180 },
+    n2: { x: 110, y: 90 },
+    n3: { x: 190, y: 50 },
+    n4: { x: 270, y: 60 },
+    n5: { x: 340, y: 110 },
+    n6: { x: 320, y: 190 },
+    n7: { x: 230, y: 220 },
+    n8: { x: 130, y: 210 },
+  },
+  cluster: {
+    n1: { x: 150, y: 80 },
+    n2: { x: 205, y: 55 },
+    n3: { x: 160, y: 145 },
+    n4: { x: 235, y: 105 },
+    n5: { x: 255, y: 60 },
+    n6: { x: 210, y: 175 },
+    n7: { x: 275, y: 150 },
+    n8: { x: 110, y: 130 },
+  },
+  grid: {
+    n1: { x: 55, y: 55 },
+    n2: { x: 180, y: 55 },
+    n3: { x: 305, y: 55 },
+    n4: { x: 55, y: 150 },
+    n5: { x: 180, y: 150 },
+    n6: { x: 305, y: 150 },
+    n7: { x: 120, y: 220 },
+    n8: { x: 245, y: 220 },
+  },
 }
+const LAYOUT_NAMES = Object.keys(LAYOUTS)
 
-function edgePathD(edge: EdgeDef) {
-  const a = nodeById(edge.a)
-  const b = nodeById(edge.b)
+function edgePathD(a: { x: number; y: number }, b: { x: number; y: number }) {
   return `M${a.x},${a.y} L${b.x},${b.y}`
 }
 
@@ -72,12 +124,36 @@ export function NetworkGraph() {
   const nodeEls = useRef<Record<string, SVGCircleElement | null>>({})
   const edgeEls = useRef<Record<string, SVGPathElement | null>>({})
   const pointer = useRef({ x: VIEWBOX_W / 2, y: VIEWBOX_H / 2 })
+  const currentLayout = useRef('default')
 
   useGSAP(
     () => {
       const prefersReducedMotion = window.matchMedia(
         '(prefers-reduced-motion: reduce)',
       ).matches
+
+      // Reads live DOM position rather than a layout constant — after the
+      // first hover-triggered shape shift, the constants no longer
+      // describe where anything currently is.
+      function getNodePos(id: NodeId) {
+        const el = nodeEls.current[id]
+        if (el) return { x: el.cx.baseVal.value, y: el.cy.baseVal.value }
+        return LAYOUTS.default[id]
+      }
+
+      // Recomputes one edge's `d` from its endpoints' current positions,
+      // and refreshes its dash length to match — otherwise a stale
+      // strokeDasharray from before a shape shift (sized for the old,
+      // different-length edge) can cut the line off partway along the
+      // new one.
+      function redrawEdge(edge: EdgeDef) {
+        const el = edgeEls.current[edge.id]
+        if (!el) return
+        el.setAttribute('d', edgePathD(getNodePos(edge.a), getNodePos(edge.b)))
+        const len = el.getTotalLength()
+        el.setAttribute('stroke-dasharray', String(len))
+        el.setAttribute('stroke-dashoffset', '0')
+      }
 
       // ---- Initial states ----
       for (const edge of EDGES) {
@@ -90,8 +166,8 @@ export function NetworkGraph() {
           gsap.set(el, { opacity: 0 })
         }
       }
-      for (const node of NODES) {
-        const el = nodeEls.current[node.id]
+      for (const id of NODE_IDS) {
+        const el = nodeEls.current[id]
         if (el) gsap.set(el, { scale: prefersReducedMotion ? 1 : 0, transformOrigin: '50% 50%' })
       }
 
@@ -112,15 +188,15 @@ export function NetworkGraph() {
         if (!el) return
         entrance.to(el, { strokeDashoffset: 0, duration: 0.6, ease: 'power2.out' }, i * 0.12)
       })
-      NODES.forEach((node, i) => {
-        const el = nodeEls.current[node.id]
+      NODE_IDS.forEach((id, i) => {
+        const el = nodeEls.current[id]
         if (!el) return
         entrance.to(el, { scale: 1, duration: 0.5, ease: 'back.out(2.2)' }, 0.25 + i * 0.08)
       })
 
       // ---- 2. Idle breathing, staggered per node ----
-      for (const node of NODES) {
-        const el = nodeEls.current[node.id]
+      for (const id of NODE_IDS) {
+        const el = nodeEls.current[id]
         if (!el) continue
         gsap.to(el, {
           scale: 1.25,
@@ -182,9 +258,9 @@ export function NetworkGraph() {
 
       // ---- 3. Cursor-proximity glow ----
       const nodeOpacityTo: Record<string, (v: number) => void> = {}
-      for (const node of NODES) {
-        const el = nodeEls.current[node.id]
-        if (el) nodeOpacityTo[node.id] = gsap.quickTo(el, 'opacity', { duration: 0.4 })
+      for (const id of NODE_IDS) {
+        const el = nodeEls.current[id]
+        if (el) nodeOpacityTo[id] = gsap.quickTo(el, 'opacity', { duration: 0.4 })
       }
       const edgeWidthTo: Record<string, (v: number) => void> = {}
       for (const edge of EDGES) {
@@ -203,15 +279,16 @@ export function NetworkGraph() {
 
       function updateProximity() {
         const { x: px, y: py } = pointer.current
-        for (const node of NODES) {
-          const dist = Math.hypot(node.x - px, node.y - py)
+        for (const id of NODE_IDS) {
+          const pos = getNodePos(id)
+          const dist = Math.hypot(pos.x - px, pos.y - py)
           const proximity = Math.max(0, 1 - dist / 110)
-          nodeOpacityTo[node.id]?.(0.5 + proximity * 0.5)
+          nodeOpacityTo[id]?.(0.5 + proximity * 0.5)
         }
         for (const edge of EDGES) {
           if (!activeEdgeIds.has(edge.id)) continue
-          const a = nodeById(edge.a)
-          const b = nodeById(edge.b)
+          const a = getNodePos(edge.a)
+          const b = getNodePos(edge.b)
           const dist = Math.hypot((a.x + b.x) / 2 - px, (a.y + b.y) / 2 - py)
           const proximity = Math.max(0, 1 - dist / 130)
           edgeWidthTo[edge.id]?.(1 + proximity * 1.2)
@@ -219,11 +296,37 @@ export function NetworkGraph() {
       }
       gsap.ticker.add(updateProximity)
 
+      // ---- 6. Shape-shift on hover ----
+      function shiftToLayout(name: string) {
+        const layout = LAYOUTS[name]
+        const tl = gsap.timeline({
+          onUpdate: () => {
+            for (const edge of EDGES) redrawEdge(edge)
+          },
+        })
+        NODE_IDS.forEach((id) => {
+          const el = nodeEls.current[id]
+          if (!el) return
+          tl.to(el, { attr: { cx: layout[id].x, cy: layout[id].y }, duration: 1.1, ease: 'power2.inOut' }, 0)
+        })
+      }
+
+      function handleEnter() {
+        const options = LAYOUT_NAMES.filter((n) => n !== currentLayout.current)
+        const next = options[Math.floor(Math.random() * options.length)]
+        currentLayout.current = next
+        shiftToLayout(next)
+      }
+
+      const svgEl = rootRef.current
+      svgEl?.addEventListener('pointerenter', handleEnter)
+
       return () => {
         window.clearInterval(signalInterval)
         window.clearInterval(swapInterval)
         window.removeEventListener('pointermove', handleMove)
         gsap.ticker.remove(updateProximity)
+        svgEl?.removeEventListener('pointerenter', handleEnter)
       }
     },
     { scope: rootRef },
@@ -243,20 +346,20 @@ export function NetworkGraph() {
             ref={(el) => {
               edgeEls.current[edge.id] = el
             }}
-            d={edgePathD(edge)}
+            d={edgePathD(LAYOUTS.default[edge.a], LAYOUTS.default[edge.b])}
           />
         ))}
       </g>
       <g fill="var(--color-fg)">
-        {NODES.map((node) => (
+        {NODE_IDS.map((id) => (
           <circle
-            key={node.id}
+            key={id}
             ref={(el) => {
-              nodeEls.current[node.id] = el
+              nodeEls.current[id] = el
             }}
-            cx={node.x}
-            cy={node.y}
-            r={node.r}
+            cx={LAYOUTS.default[id].x}
+            cy={LAYOUTS.default[id].y}
+            r={NODE_RADII[id]}
             opacity={0.6}
           />
         ))}

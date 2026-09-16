@@ -39,24 +39,26 @@ export function Hero() {
       id="top"
       className="relative flex h-screen flex-col justify-between overflow-hidden px-6 pt-24 pb-10 md:px-10"
     >
-      {/* A quiet node network standing in for the hero's old 3D showpiece
-       * (football → metaball face → sculpted head → raymarched chrome blob
-       * — none of it landed). Plain SVG/GSAP, no WebGL, no progressive-
-       * enhancement fallback needed. Boxed rather than full-bleed so it
-       * doesn't sit behind the headline. Hidden below md for the same
-       * reason the old headshot photo was — the headline already claims
-       * most of the width on narrow viewports. */}
-      <div className="pointer-events-none absolute right-6 bottom-10 hidden h-80 w-80 md:block lg:right-10 lg:h-[28rem] lg:w-[28rem]">
-        <NetworkGraph />
-      </div>
-
       <div className="flex flex-1 flex-col justify-center gap-6">
-        <h1
-          ref={nameRef}
-          className="font-serif text-[13vw] leading-[0.95] font-medium tracking-tight sm:text-[10vw] md:text-[7.5vw]"
-        >
-          {heroCopy.headline}
-        </h1>
+        <div className="flex items-center justify-between gap-8">
+          <h1
+            ref={nameRef}
+            className="font-serif text-[13vw] leading-[0.95] font-medium tracking-tight sm:text-[10vw] md:text-[7.5vw]"
+          >
+            {heroCopy.headline}
+          </h1>
+          {/* A quiet node network standing in for the hero's old 3D showpiece
+           * (football → metaball face → sculpted head → raymarched chrome
+           * blob — none of it landed). Plain SVG/GSAP, no WebGL. A flex
+           * sibling of the headline rather than absolutely positioned, so it
+           * stays vertically centered against the name instead of drifting
+           * with whatever else is in the section. Hidden below md for the
+           * same reason the old headshot photo was — the headline already
+           * claims most of the width on narrow viewports. */}
+          <div className="hidden h-64 w-64 shrink-0 md:block lg:h-80 lg:w-80">
+            <NetworkGraph />
+          </div>
+        </div>
         <FadeIn delay={0.35}>
           <p className="max-w-md text-lg text-[var(--color-muted)] md:text-xl">
             {heroCopy.subLine}
