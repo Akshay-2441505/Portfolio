@@ -1,9 +1,13 @@
 import { ArrowUpRight } from 'lucide-react'
-import type { MouseEvent } from 'react'
+import { useRef, type MouseEvent } from 'react'
+import { useGSAP } from '@gsap/react'
 import { GenerativeArt } from './GenerativeArt'
 import { LoanFlowVisual } from './LoanFlowVisual'
 import { Magnetic } from './Magnetic'
 import { WireframeVisual } from './WireframeVisual'
+import { WordReveal } from './WordReveal'
+import { useInView } from '../hooks/useInView'
+import { gsap, ScrollTrigger } from '../lib/gsap'
 import type { Project } from '../data/content'
 
 function handleSpotlight(e: MouseEvent<HTMLDivElement>) {
@@ -34,40 +38,129 @@ function StatusPill({ status }: { status: Project['status'] }) {
   )
 }
 
-export function ProjectCard({
-  project,
-  active,
-}: {
-  project: Project
-  active: boolean
-}) {
+/** One block of the Highlights editorial spread (replacing the old GSAP Flip
+ * card-stack) — visual on one side, details on the other, alternating per
+ * `reverse`. Each block choreographs its own entrance: the visual slides in
+ * from whichever side it sits on and the project number snaps into place,
+ * both once, plus a continuous scroll-scrub parallax on the visual that
+ * keeps running for as long as the block is on screen (the entrance and the
+ * parallax are independent GSAP animations on the same element — no
+ * conflict, since one is a one-shot and the other keys off `scrub`, but
+ * they're set up in the same effect so both get cleaned up together). */
+export function ProjectCard({ project, reverse = false }: { project: Project; reverse?: boolean }) {
+  const rootRef = useRef<HTMLDivElement>(null)
+  const visualRef = useRef<HTMLDivElement>(null)
+  const numberRef = useRef<HTMLSpanElement>(null)
+  const { ref: viewRef, inView } = useInView<HTMLDivElement>({ threshold: 0.15 })
+
   const ctaHref = project.live ?? project.github
   const ctaLabel = project.live ? 'View Live' : 'View Code'
 
+  useGSAP(
+    () => {
+      const prefersReducedMotion = window.matchMedia(
+        '(prefers-reduced-motion: reduce)',
+      ).matches
+      const visual = visualRef.current
+      const number = numberRef.current
+      if (!visual || prefersReducedMotion) return
+
+      gsap.set(visual, { x: reverse ? 48 : -48, opacity: 0 })
+      if (number) gsap.set(number, { scale: 0.7, opacity: 0 })
+
+      const entrance = ScrollTrigger.create({
+        trigger: rootRef.current,
+        start: 'top 85%',
+        once: true,
+        onEnter: () => {
+          gsap.to(visual, { x: 0, opacity: 1, duration: 0.8, ease: 'expo.out' })
+          if (number) {
+            gsap.to(number, { scale: 1, opacity: 1, duration: 0.6, ease: 'back.out(2.2)', delay: 0.1 })
+          }
+        },
+      })
+
+      const parallax = gsap.fromTo(
+        visual,
+        { yPercent: -6 },
+        {
+          yPercent: 6,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: rootRef.current,
+            start: 'top bottom',
+            end: 'bottom top',
+            scrub: true,
+          },
+        },
+      )
+
+      return () => {
+        entrance.kill()
+        parallax.kill()
+      }
+    },
+    { scope: rootRef, dependencies: [reverse] },
+  )
+
   return (
     <div
-      onMouseMove={handleSpotlight}
-      className="project-spotlight flex h-[75vh] max-h-[720px] w-full flex-col gap-6 rounded-[32px] border border-[var(--color-border)] bg-[var(--color-surface)] p-6 md:rounded-[48px] md:p-10"
+      ref={(el) => {
+        rootRef.current = el
+        viewRef.current = el
+      }}
+      className="grid items-center gap-8 md:grid-cols-2 md:gap-16"
     >
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div
+        ref={visualRef}
+        onMouseMove={handleSpotlight}
+        className={`project-spotlight relative aspect-[4/3] overflow-hidden rounded-[32px] border border-[var(--color-border)] bg-[var(--color-surface)] md:rounded-[48px] ${reverse ? 'md:order-2' : ''}`}
+      >
+        {project.visual === 'generative-art' && (
+          <GenerativeArt active={inView} className="h-full w-full" />
+        )}
+        {project.visual === 'wireframe' && (
+          <WireframeVisual active={inView} className="h-full w-full" />
+        )}
+        {project.visual === 'loan-flow' && (
+          <LoanFlowVisual active={inView} className="h-full w-full" />
+        )}
+        {!project.visual && <div className="project-card-bg h-full w-full" />}
+      </div>
+
+      <div>
         <div className="flex items-baseline gap-3 md:gap-4">
-          <span className="font-mono text-2xl text-[var(--color-muted)] md:text-3xl">
+          <span
+            ref={numberRef}
+            className="font-mono text-2xl text-[var(--color-muted)] md:text-3xl"
+          >
             {project.index}
           </span>
-          <div>
-            <div className="flex flex-wrap items-center gap-2">
-              <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-fg)]">
-                {project.category}
-              </p>
-              <StatusPill status={project.status} />
-            </div>
-            <h3 className="font-serif mt-1 text-xl font-medium tracking-tight md:text-2xl">
-              {project.name}
-            </h3>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="font-mono text-xs uppercase tracking-widest text-[var(--color-fg)]">
+              {project.category}
+            </p>
+            <StatusPill status={project.status} />
           </div>
         </div>
+        <h3 className="font-serif mt-3 text-2xl font-medium tracking-tight md:text-4xl">
+          {project.name}
+        </h3>
+        <WordReveal className="mt-4 max-w-xl text-[var(--color-muted)] md:text-lg">
+          {project.description}
+        </WordReveal>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {project.tech.map((tech) => (
+            <span
+              key={tech}
+              className="rounded-full border border-[var(--color-border)] px-3 py-1 font-mono text-xs uppercase tracking-widest text-[var(--color-muted)]"
+            >
+              {tech}
+            </span>
+          ))}
+        </div>
         {ctaHref && (
-          <Magnetic strength={14}>
+          <Magnetic strength={14} className="mt-6 inline-block">
             <a
               href={ctaHref}
               target="_blank"
@@ -79,34 +172,6 @@ export function ProjectCard({
             </a>
           </Magnetic>
         )}
-      </div>
-
-      <div className="relative min-h-[140px] flex-1 overflow-hidden rounded-2xl border border-[var(--color-border)]">
-        {project.visual === 'generative-art' && (
-          <GenerativeArt active={active} className="h-full w-full" />
-        )}
-        {project.visual === 'wireframe' && (
-          <WireframeVisual active={active} className="h-full w-full" />
-        )}
-        {project.visual === 'loan-flow' && (
-          <LoanFlowVisual active={active} className="h-full w-full" />
-        )}
-        {!project.visual && <div className="project-card-bg h-full w-full" />}
-      </div>
-
-      <p className="line-clamp-2 max-w-2xl text-[var(--color-muted)] md:text-lg">
-        {project.description}
-      </p>
-
-      <div className="flex flex-wrap gap-2">
-        {project.tech.map((tech) => (
-          <span
-            key={tech}
-            className="rounded-full border border-[var(--color-border)] px-3 py-1 font-mono text-xs uppercase tracking-widest text-[var(--color-muted)]"
-          >
-            {tech}
-          </span>
-        ))}
       </div>
     </div>
   )
