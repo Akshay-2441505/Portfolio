@@ -79,6 +79,10 @@ export function Contact() {
             </a>
           </div>
         </FadeIn>
+
+        <p className="mt-16 font-mono text-xs text-[var(--color-muted)]">
+          © {new Date().getFullYear()} {profile.name}
+        </p>
       </div>
     </section>
   )
