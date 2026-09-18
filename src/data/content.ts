@@ -100,26 +100,48 @@ export type Project = {
    * each one is a small recreation/visualization tied to what that
    * specific project actually does. */
   visual?: 'generative-art' | 'wireframe' | 'loan-flow'
+  /** Real screenshots for the card's visual slot (paths under public/) —
+   * takes over from `visual` when set, via ImageStrip. */
+  images?: string[]
+  /** Which device frame ImageStrip draws around `images` — set explicitly
+   * rather than measured from the images themselves (auto-detecting from
+   * natural aspect ratio was the root cause of two earlier sizing bugs).
+   * Applies to every image unless `imageDevices` overrides individual ones. */
+  deviceFrame?: 'phone' | 'browser'
+  /** Per-image device override, same length/order as `images` — for a
+   * project that mixes a mobile app with a desktop admin panel (borrower
+   * app vs approver dashboard, say) and needs each screenshot framed as
+   * what it actually is instead of forcing one frame on all of them. */
+  imageDevices?: ('phone' | 'browser')[]
 }
 
 export const projects: Project[] = [
   {
     index: '01',
     category: 'Product',
-    status: 'live',
     name: 'Dekho',
     description:
       'An AI-native personal finance app, built from real customer discovery instead of a feature list. Ran JTBD interviews to find the actual pain point behind expense-tracking behavior, designed a weighted 7-question screening framework, and used it to run a staged 10→50→100 pilot rollout — currently at 10–15 active users. Also led the Wealth section redesign and shipped Monthly Wrap and app-lock security.',
     tech: ['React', 'Vite', 'FastAPI', 'RAG chatbot'],
+    live: 'https://dekhofin.vercel.app/',
+    images: [
+      '/projects/dekho/1.jpg',
+      '/projects/dekho/2.jpg',
+      '/projects/dekho/3.jpg',
+      '/projects/dekho/4.jpg',
+    ],
+    deviceFrame: 'phone',
   },
   {
     index: '02',
-    category: 'Product — In Build',
-    status: 'in-build',
+    category: 'Product',
     name: 'Frontage',
     description:
-      'Building for the Razorpay AI Buildathon: merchants have no way to know if their catalog is even readable by AI shopping agents. Frontage audits a merchant\'s "AI-readability," auto-generates an agent-readable product catalog, then lets an AI buyer agent complete a real, bounded test-mode transaction end-to-end — a "Diagnose → Fix → Transact" flow.',
+      'Merchants have no way to know if their catalog is even readable by AI shopping agents. Frontage audits a merchant\'s "AI-readability," auto-generates an agent-readable product catalog, then lets an AI buyer agent complete a real, bounded test-mode transaction end-to-end — a "Diagnose → Fix → Transact" flow.',
     tech: ['FastAPI', 'React', 'Vite', 'Razorpay API'],
+    live: 'https://frontage-frontend.vercel.app/',
+    images: ['/projects/frontage/1.png', '/projects/frontage/2.png', '/projects/frontage/3.png'],
+    deviceFrame: 'browser',
   },
   {
     index: '03',
@@ -129,6 +151,33 @@ export const projects: Project[] = [
       'An end-to-end loan workflow simulation with borrower and approver roles — designing who approves what, and why, across application, validation, and approval/rejection logic.',
     tech: ['Python', 'PL/SQL', 'MySQL', 'Supabase'],
     github: 'https://github.com/Akshay-2441505/PSD_Final_Project',
+    images: [
+      '/projects/msme/1.webp',
+      '/projects/msme/2.png',
+      '/projects/msme/3.png',
+      '/projects/msme/4.png',
+      '/projects/msme/5.png',
+      '/projects/msme/6.png',
+    ],
+    deviceFrame: 'browser',
+  },
+  {
+    index: '04',
+    category: 'Product / Health-Tech',
+    name: 'DiaFit',
+    description:
+      'A health and lifestyle management app built with a friend — daily diet and medication tracking, an AI-assisted food scanner, and encrypted medical records, aimed at pulling day-to-day health management out of a scatter of separate apps into one place.',
+    tech: ['Flutter', 'ASP.NET Core', 'SQL Server'],
+    github: 'https://github.com/JosephAlex-dev/DIA-FIT-',
+    images: [
+      '/projects/diafit/1.png',
+      '/projects/diafit/2.png',
+      '/projects/diafit/3.png',
+      '/projects/diafit/4.png',
+      '/projects/diafit/5.png',
+      '/projects/diafit/6.png',
+    ],
+    deviceFrame: 'phone',
   },
 ]
 
@@ -160,8 +209,6 @@ export const moreWork: MoreWorkItem[] = [
 export const heroCopy = {
   headline: 'Akshay Kurdekar',
   subLine: 'Learning how products get built, tested, and sold.',
-  positionTag: 'Product & Business',
-  metaLine: 'BCA Student · Building Dekho',
 }
 
 export const fullTime = {

@@ -1,16 +1,16 @@
 import { ArrowUpRight } from 'lucide-react'
 import { FadeIn } from './FadeIn'
 import { Magnetic } from './Magnetic'
-import { ProjectCard } from './ProjectCard'
+import { ProjectStack } from './ProjectStack'
 import { WordReveal } from './WordReveal'
 import { moreWork, projects } from '../data/content'
 
-/** Highlights — an editorial spread, replacing an earlier GSAP Flip
- * click-to-cycle card stack. The stack was clever but had a real
- * discoverability problem: a visitor who never clicked it never saw
- * projects 2 and 3. This just shows all three, alternating visual/text
- * sides, each revealed via its own ScrollTrigger (see ProjectCard.tsx) —
- * simpler code too, no Flip state machine to keep correct. */
+/** Highlights, take five — GSAP's "pinned panels" pattern (ProjectStack.tsx):
+ * each project pins full-viewport as you scroll into it, and the next one
+ * slides up over it. The prior static-grid version solved "a visitor might
+ * skip a project entirely" by putting everything on screen at once; this
+ * solves it differently — the scroll itself walks you through each project
+ * in turn, so there's no static grid to skim past unread. */
 export function Projects() {
   return (
     <>
@@ -20,10 +20,8 @@ export function Projects() {
         </FadeIn>
       </section>
 
-      <div id="projects" className="flex flex-col gap-20 px-6 pb-24 md:gap-32 md:px-10 md:pb-32">
-        {projects.map((project, i) => (
-          <ProjectCard key={project.name} project={project} reverse={i % 2 === 1} />
-        ))}
+      <div id="projects">
+        <ProjectStack projects={projects} />
       </div>
 
       <MoreWork />

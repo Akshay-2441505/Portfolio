@@ -30,21 +30,15 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Per-section tone shift — defaults to the base tone; Highlights/Projects
- * switch to the deeper tone so sections read as a journey through shades of
- * the same beige, the only "color" move this palette makes. */
+/* Per-section tone shift — defaults to the base tone. Individual sections
+ * opt into the deeper tone where it helps (ProjectStack.tsx tints
+ * alternating project panels directly); nothing opts in section-wide
+ * anymore, so this just keeps the mechanism in place for the next place
+ * that wants it. */
 :root {
   --section-tint: var(--color-bg);
 }
 section {
-  background: var(--section-tint);
-}
-/* #projects is a plain div (the sticky-card stack), not a <section> — needs
- * its own explicit background since the generic `section` rule above only
- * matches actual section elements like #highlights. */
-#highlights,
-#projects {
-  --section-tint: var(--color-deep);
   background: var(--section-tint);
 }
 
@@ -73,6 +67,16 @@ section {
 }
 html {
   scrollbar-color: var(--color-border) var(--color-bg);
+}
+
+/* Image strips (ImageStrip.tsx) navigate via arrows/dots/drag, not a
+   visible scrollbar. */
+.scrollbar-hide {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
 
 /* Project cards */
