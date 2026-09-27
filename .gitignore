@@ -35,4 +35,6 @@ dist-ssr
 /project screenshots/
 *.mp4
 *.heic
+Gemini_Generated_Image*
+Akshay_Resume_CU.pdf
 /WhatsApp*
