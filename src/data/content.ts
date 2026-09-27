@@ -146,38 +146,36 @@ export const projects: Project[] = [
   {
     index: '03',
     category: 'Product / Systems',
-    name: 'Digital MSME Loan Simulation',
+    name: 'Wattshift',
     description:
-      'An end-to-end loan workflow simulation with borrower and approver roles — designing who approves what, and why, across application, validation, and approval/rejection logic.',
-    tech: ['Python', 'PL/SQL', 'MySQL', 'Supabase'],
-    github: 'https://github.com/Akshay-2441505/PSD_Final_Project',
+      "A GPU job scheduler that times flexible compute jobs to run during cheaper electricity hours, using India's time-of-day tariffs and the IEX day-ahead market. Works as a standalone scheduler picking the cheapest valid window or as an agent beside a Slurm queue with shadow-mode and emergency-release safeguards. Savings independently measured via actual GPU power draw (nvidia-smi) on a live Kaggle T4.",
+    tech: ['FastAPI', 'PostgreSQL', 'React', 'TypeScript', 'Tailwind', 'Slurm'],
+    live: 'https://watt-shift.vercel.app/',
+    github: 'https://github.com/Akshay-2441505/WattShift',
     images: [
-      '/projects/msme/1.webp',
-      '/projects/msme/2.png',
-      '/projects/msme/3.png',
-      '/projects/msme/4.png',
-      '/projects/msme/5.png',
-      '/projects/msme/6.png',
+      '/projects/wattshift/1.png',
+      '/projects/wattshift/2.png',
+      '/projects/wattshift/3.png',
+      '/projects/wattshift/4.png',
     ],
     deviceFrame: 'browser',
   },
   {
     index: '04',
-    category: 'Product / Health-Tech',
-    name: 'DiaFit',
+    category: 'Product / Civic-Tech',
+    name: 'Sahi Ghar',
     description:
-      'A health and lifestyle management app built with a friend — daily diet and medication tracking, an AI-assisted food scanner, and encrypted medical records, aimed at pulling day-to-day health management out of a scatter of separate apps into one place.',
-    tech: ['Flutter', 'ASP.NET Core', 'SQL Server'],
-    github: 'https://github.com/JosephAlex-dev/DIA-FIT-',
+      "Surfaces a real-estate builder's RERA regulatory track record — project delays, complaints, and delivery timelines — before a buyer books a home, addressing a gap where public filings are hard to browse. Sourced from MahaRERA filings via a bounded, polite crawler with CAPTCHA detection, backed by FastAPI and PostgreSQL.",
+    tech: ['Python', 'FastAPI', 'PostgreSQL', 'React', 'TypeScript'],
+    live: 'https://sahi-ghar.vercel.app/',
+    github: 'https://github.com/Akshay-2441505/Sahi-Ghar',
     images: [
-      '/projects/diafit/1.png',
-      '/projects/diafit/2.png',
-      '/projects/diafit/3.png',
-      '/projects/diafit/4.png',
-      '/projects/diafit/5.png',
-      '/projects/diafit/6.png',
+      '/projects/sahighar/1.png',
+      '/projects/sahighar/2.png',
+      '/projects/sahighar/3.png',
+      '/projects/sahighar/4.png',
     ],
-    deviceFrame: 'phone',
+    deviceFrame: 'browser',
   },
 ]
 
@@ -190,6 +188,20 @@ export type MoreWorkItem = {
 }
 
 export const moreWork: MoreWorkItem[] = [
+  {
+    name: 'Digital MSME Loan Simulation',
+    description:
+      'An end-to-end loan workflow simulation with borrower and approver roles — designing who approves what, and why, across application, validation, and approval/rejection logic.',
+    tech: ['Python', 'PL/SQL', 'MySQL', 'Supabase'],
+    github: 'https://github.com/Akshay-2441505/PSD_Final_Project',
+  },
+  {
+    name: 'DiaFit',
+    description:
+      'A health and lifestyle management app built with a friend — daily diet and medication tracking, an AI-assisted food scanner, and encrypted medical records.',
+    tech: ['Flutter', 'ASP.NET Core', 'SQL Server'],
+    github: 'https://github.com/JosephAlex-dev/DIA-FIT-',
+  },
   {
     name: '3D Interactive Website',
     description:
