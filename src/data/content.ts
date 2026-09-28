@@ -33,7 +33,7 @@ export const education = [
 export const experience = [
   {
     org: 'Dekho — AI-Native Personal Finance Startup',
-    role: 'Co-founder',
+    role: 'Founding Team Member',
     period: 'Apr 2026 — Present',
     points: [
       'Ran JTBD customer-discovery interviews to uncover real pain points behind expense-tracking behavior.',
